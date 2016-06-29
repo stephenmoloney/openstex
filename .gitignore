@@ -1,0 +1,14 @@
+/_build
+/cover
+/deps
+/.deprecated
+/doc
+/.idea
+/config/dev.exs
+
+erl_crash.dump
+*.ez
+mix
+mix.lock
+.env
+
