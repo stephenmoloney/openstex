@@ -15,7 +15,7 @@ defmodule Openstex.Services.Swift.V1.Helpers do
         def client(), do: Keyword.fetch!(unquote(opts), :client)
 
         @doc :false
-        def default_httpoison_opts(), do: client().config().httpoison_config(client())
+        def default_httpoison_opts(), do: client().config().httpoison_config(client()) |> Og.log_return(__ENV__, :warn)
 
         def get_public_url() do
           client().keystone().identity(client())

@@ -13,7 +13,7 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Config do
 
   def start_agent(openstex_client, opts) do
     Og.context(__ENV__, :debug)
-    otp_app = Keyword.get(opts, :otp_app, :false) || Og.log_return(__ENV__, :error) |> raise()
+    otp_app = Keyword.get(opts, :otp_app, :false) || raise("Client has not been configured correctly, missing `:otp_app`")
 
     ovh_client = Module.concat(openstex_client, Ovh)
     Application.ensure_all_started(:ex_ovh)
@@ -58,11 +58,11 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Config do
 
     tenant_id = keystone_config[:tenant_id] ||
                 identity.token.tenant.id ||
-                Og.log_return("cannot retrieve the tenant_id for keystone", __ENV__, :error) |> raise()
+                raise("cannot retrieve the tenant_id for keystone")
 
     user_id =   keystone_config[:user_id] ||
                 identity.user.id ||
-                Og.log_return("cannot retrieve the user_id for keystone", __ENV__, :error) |> raise()
+                raise("cannot retrieve the user_id for keystone")
 
     endpoint =  keystone_config[:endpoint] ||
                 "https://auth.cloud.ovh.net/v2.0"

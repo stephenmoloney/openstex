@@ -113,7 +113,7 @@ defmodule Openstex.Adapters.Ovh.Cloudstorage.Keystone do
       table = :ets.lookup(ets_tablename(openstex_client), :identity)
       case table do
         [identity: identity] ->
-          if identity.lock === :true do
+          if identity.lock == :true do
             retry.(openstex_client, index)
           else
             identity

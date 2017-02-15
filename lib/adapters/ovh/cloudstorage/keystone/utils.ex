@@ -37,8 +37,8 @@ defmodule Openstex.Adapters.Ovh.Cloudstorage.Keystone.Utils do
 
     resp = ExOvh.Services.V1.Cloud.Query.regenerate_credentials(tenant_id, ovh_user_id)
     |> ovh_client.request!()
-    password = resp.body["password"] || Og.log_return("Password not found", __ENV__, :error) |> raise()
-    username = resp.body["username"] || Og.log_return("Username not found", __ENV__, :error) |> raise()
+    password = resp.body["password"] || raise("Password not found")
+    username = resp.body["username"] || raise("Username not found")
     endpoint = keystone_config[:endpoint] || "https://auth.cloud.ovh.net/v2.0"
 
     # make sure the regenerate credentials (in the external ovh api) had a chance to take effect

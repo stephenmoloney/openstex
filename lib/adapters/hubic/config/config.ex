@@ -8,7 +8,7 @@ defmodule Openstex.Adapters.Hubic.Config do
 
   def start_agent(openstex_client, opts) do
     Og.context(__ENV__, :debug)
-    otp_app = Keyword.get(opts, :otp_app, :false) || Og.log_return(__ENV__, :error) |> raise()
+    otp_app = Keyword.get(opts, :otp_app, :false) || raise("Client has not been configured correctly, missing `:otp_app`")
 
     hubic_client = Module.concat(openstex_client, Hubic)
     Application.ensure_all_started(:ex_hubic)

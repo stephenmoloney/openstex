@@ -52,10 +52,10 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Keystone.Utils do
     ovh_config = Config.get_config_from_env(openstex_client, otp_app) |> Keyword.get(:ovh, :nil) ||
                  openstex_client.config().ovh_config(openstex_client) ||
                  ovh_client.config() ||
-                 Og.log_return("Cannot retrieve the ovh_config", __ENV__, :error) |> raise()
+                 raise("Cannot retrieve the ovh_config")
 
     cdn_name = ovh_config[:cdn_name] ||
-               Og.log_return("Cannot retrieve the CDN name for the webstorage client #{openstex_client}", __ENV__, :error) |> raise()
+               raise("Cannot retrieve the CDN name for the webstorage client #{openstex_client}")
 
     %{endpoint: endpoint, username: username, password: password, tenant_name: tenant_name} = webstorage(ovh_client, cdn_name)
     Keystone.authenticate!(endpoint, username, password, [tenant_name: tenant_name])

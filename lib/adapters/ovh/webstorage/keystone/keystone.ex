@@ -32,6 +32,7 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Keystone do
   def init(openstex_client) do
     Og.context(__ENV__, :debug)
     :erlang.process_flag(:trap_exit, :true)
+    delay_until_config_started(openstex_client)
     create_ets_table(openstex_client)
     identity = create_identity(openstex_client)
     identity = Map.put(identity, :lock, :false)
@@ -74,13 +75,25 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Keystone do
   end
 
   def terminate(:shutdown,  {:failed_to_start_child, openstex_client, {:already_started, _pid}}) do
-    Og.context(__ENV__, :debug)
+    Og.context(__ENV__, :error)
     :ets.delete(ets_tablename(openstex_client)) # explicilty remove
     :ok
   end
 
-  def terminate(:normal, {_openstex_client, _identity}) do
-    Og.context(__ENV__, :debug)
+  def terminate(:normal, {openstex_client, _identity}) do
+    Og.context(__ENV__, :error)
+    :ets.delete(ets_tablename(openstex_client))
+    :ok
+  end
+
+  def terminate(_type,  {openstex_client, _}) do
+    Og.context(__ENV__, :error)
+    :ets.delete(ets_tablename(openstex_client)) # explicilty remove
+    :ok
+  end
+
+  def terminate(_, _reason) do
+    Og.context(__ENV__, :error)
     :ok
   end
 
@@ -113,12 +126,15 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Keystone do
       table = :ets.lookup(ets_tablename(openstex_client), :identity)
       case table do
         [identity: identity] ->
-          if identity.lock === :true do
+          if identity.lock == :true do
+            Og.log("Identity is currently locked in the ets table, retrying after #{Integer.to_string(@get_identity_interval)}")
             retry.(openstex_client, index)
           else
             identity
           end
-        [] -> retry.(openstex_client, index)
+        [] ->
+          Og.log("Identity is currently not stored in the ets table, retrying after #{Integer.to_string(@get_identity_interval)}")
+          retry.(openstex_client, index)
       end
     else
       retry.(openstex_client, index)
@@ -176,6 +192,16 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Keystone do
 
   defp supervisor_exists?(client) do
     Process.whereis(client) != :nil
+  end
+
+
+  defp delay_until_config_started(openstex_client, max_delays \\ 100) do
+    config_agent = Module.concat(Openstex.Adapters.Ovh.Webstorage.Config, openstex_client)
+    |> Og.log_return(__ENV__, :debug)
+    unless config_agent in Process.registered() do
+      :timer.sleep(200)
+      delay_until_config_started(openstex_client)
+    end
   end
 
 

@@ -1,6 +1,6 @@
 defmodule Openstex.Query do
   @moduledoc false
-    defstruct [:method, :uri, :params, :service, headers: []]
+  defstruct [:method, :uri, :params, :service, headers: []]
   @type t :: %__MODULE__{
                         method: atom,
                         uri: String.t,

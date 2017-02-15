@@ -13,7 +13,7 @@ defmodule Openstex.Adapters.Rackspace.CloudfilesCDN.Config do
 
   def start_agent(client, opts) do
     Og.context(__ENV__, :debug)
-    otp_app = Keyword.get(opts, :otp_app, :false) || Og.log_return(__ENV__, :error) |> raise()
+    otp_app = Keyword.get(opts, :otp_app, :false) || raise("Client has not been configured correctly, missing `:otp_app`")
     identity = create_identity(client, otp_app)
     Agent.start_link(fn -> config(client, otp_app, identity) end, name: agent_name(client))
   end
@@ -45,11 +45,11 @@ defmodule Openstex.Adapters.Rackspace.CloudfilesCDN.Config do
 
     tenant_id = keystone_config[:tenant_id] ||
                 identity.token.tenant.id ||
-                Og.log_return("cannot retrieve the tenant_id for keystone", __ENV__, :error) |> raise()
+                raise("cannot retrieve the tenant_id for keystone")
 
     user_id =   keystone_config[:user_id] ||
                 identity.user.id ||
-                Og.log_return("cannot retrieve the user_id for keystone", __ENV__, :error) |> raise()
+                raise("cannot retrieve the user_id for keystone")
 
     endpoint =  keystone_config[:endpoint] ||
                 "https://identity.api.rackspacecloud.com/v2.0"
@@ -89,7 +89,7 @@ defmodule Openstex.Adapters.Rackspace.CloudfilesCDN.Config do
 
     region =   swift_config[:region] ||
                identity.user.mapail["RAX-AUTH:defaultRegion"] ||
-               Og.log_return("cannot retrieve the region for keystone", __ENV__, :error) |> raise()
+               raise("cannot retrieve the region for keystone")
 
     if swift_config[:region] != :nil && identity.user.mapail["RAX-AUTH:defaultRegion"] != swift_config[:region] do
       Og.log("Warning, the `swift_config[:region]` for the elixir `config.exs` for the swift client " <>
@@ -206,7 +206,7 @@ defmodule Openstex.Adapters.Rackspace.CloudfilesCDN.Config do
 
     region =   swift_config[:region] ||
                identity.user.mapail["RAX-AUTH:defaultRegion"] ||
-               Og.log_return("cannot retrieve the region for keystone", __ENV__, :error) |> raise()
+               raise("cannot retrieve the region for keystone")
 
     identity
     |> Map.get(:service_catalog)

@@ -4,8 +4,8 @@ defmodule Openstex.Utils  do
   @doc """
   Put headers for a http_query. If the headers already exist, the new headers will override the old headers.
   """
-  @spec put_http_headers(Openstex.HttpQuery.t, map) :: Openstex.HttpQuery.t
-  def put_http_headers(%Openstex.HttpQuery{headers: headers} = http_query, new_headers) when is_map(new_headers) do
+  @spec put_http_headers(map, map) :: map
+  def put_http_headers(%{headers: headers} = http_query, new_headers) when is_map(new_headers) do
     old_headers_map = headers |> Enum.into(%{})
     new_headers_map = Map.merge(old_headers_map, new_headers)
     new_headers = Map.to_list(new_headers_map)

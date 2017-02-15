@@ -14,9 +14,9 @@ defmodule Openstex.Adapters.Hubic.Keystone.Utils do
 
     resp = ExHubic.Services.V1.Query.openstack_credentials() |> hubic_client.request!()
 
-    public_url = resp.body["endpoint"] || Og.log_return("Could not get endpoint", __ENV__, :error) |> raise()
-    xauth_token = resp.body["token"] || Og.log_return("Could not get xauth_token", __ENV__, :error) |> raise()
-    xauth_token_expiry = resp.body["expires"] || Og.log_return("Could not get expiry time for xauth_token", __ENV__, :error) |> raise()
+    public_url = resp.body["endpoint"] || raise("Could not get the endpoint from the identity response")
+    xauth_token = resp.body["token"] || raise("Could not get xauth_token from the identity response")
+    xauth_token_expiry = resp.body["expires"] || raise("Could not get expiry time for xauth_token from the identity response")
 
     %Identity{
               token: %Identity.Token{

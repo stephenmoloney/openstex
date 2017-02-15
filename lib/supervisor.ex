@@ -14,13 +14,23 @@ defmodule Openstex.Supervisor do
   def init({client, opts}) do
     Og.context(__ENV__, :debug)
     config = client.config()
+    keystone = client.keystone()
+
     sup_tree =
     if config.__info__(:module) != :nil do
-      [{client, {config, :start_agent, [client, opts]}, :permanent, 10_000, :worker, [config]}]
+      [{config, {config, :start_agent, [client, opts]}, :permanent, 10_000, :worker, [config]}]
     else
       []
     end
-    supervise(sup_tree, strategy: :one_for_one, max_restarts: 30)
+
+    sup_tree =
+    if keystone.__info__(:module) != :nil do
+      sup_tree ++ [{client, {keystone, :start_link, [client]}, :permanent, 20_000, :worker, [keystone]}]
+    else
+      []
+    end
+
+    supervise(sup_tree, strategy: :one_for_one, max_restarts: 3, max_seconds: 60) # max 10 restarts in 1 minute
   end
 
   defp supervisor_name(client) do

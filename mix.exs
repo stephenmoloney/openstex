@@ -31,7 +31,8 @@ defmodule Openstex.Mixfile do
       # Production deps
       {:poison, "~> 2.0"},
       {:httpoison, "~> 0.8.0"},
-      {:calendar, "~> 0.13.2"},
+#    {:calendar, "~> 0.13.2"},
+      {:calendar, "~> 0.14.0"},
       {:mapail, github: "stephenmoloney/mapail", branch: "master"},
 
       # Docs deps

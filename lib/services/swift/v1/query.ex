@@ -33,7 +33,7 @@ defmodule Openstex.Services.Swift.V1.Query do
       account = client.swift().get_account()
       Openstex.Services.Swift.V1.Query.account_info(account) |> client.request()
   """
-  @spec account_info(String.t) :: Openstack.t
+  @spec account_info(String.t) :: Openstex.Swift.Query.t
   def account_info(account) do
     %Query{
            method: :get,
@@ -85,7 +85,7 @@ defmodule Openstex.Services.Swift.V1.Query do
       account = client.swift().get_account()
       Openstex.Services.Swift.V1.Query.create_container("new_container", account) |> client.request()
   """
-  @spec create_container(String.t, String.t, Keyword.t) :: Openstack.t
+  @spec create_container(String.t, String.t, Keyword.t) :: Openstex.Swift.Query.t
   def create_container(container, account, opts \\ []) do
     read_acl = Keyword.get(opts, :read_acl, :nil)
     write_acl = Keyword.get(opts, :write_acl, :nil)
@@ -149,7 +149,7 @@ defmodule Openstex.Services.Swift.V1.Query do
       headers = []
       Openstex.Services.Swift.V1.Query.modify_container("new_container", account, headers) |> client.request()
   """
-  @spec modify_container(String.t, String.t, Keyword.t) :: Openstack.t
+  @spec modify_container(String.t, String.t, Keyword.t) :: Openstex.Swift.Query.t
   def modify_container(container, account, opts \\ []) do
     create_container(container, account, opts)
     |> Map.put(:method, :post)
@@ -170,7 +170,7 @@ defmodule Openstex.Services.Swift.V1.Query do
       account = client.swift().get_account()
       Openstex.Services.Swift.V1.Query.delete_container("new_container", account) |> client.request(query)
   """
-  @spec delete_container(String.t, String.t) :: Openstack.t
+  @spec delete_container(String.t, String.t) :: Openstex.Swift.Query.t
   def delete_container(container, account) do
     %Query{
            method: :delete,
@@ -195,7 +195,7 @@ defmodule Openstex.Services.Swift.V1.Query do
       account = client.swift().get_account()
       query = Openstex.Services.Swift.V1.Query.container_info("new_container", account) |> client.request()
   """
-  @spec container_info(String.t, String.t) :: Openstack.t
+  @spec container_info(String.t, String.t) :: Openstex.Swift.Query.t
   def container_info(container, account) do
     %Query{
           method: :head,
@@ -223,7 +223,7 @@ defmodule Openstex.Services.Swift.V1.Query do
       account = client.swift().get_account()
       Openstex.Services.Swift.V1.Query.get_objects("new_container", account) |> client.request()
   """
-  @spec get_objects(String.t, String.t) :: Openstack.t
+  @spec get_objects(String.t, String.t) :: Openstex.Swift.Query.t
   def get_objects(container, account) do
     %Query{
           method: :get,
@@ -259,7 +259,7 @@ defmodule Openstex.Services.Swift.V1.Query do
   - `opts`:
       - `headers`: Additional headers metadata in the request. Eg `[headers: [{"If-None-Match", "<local_file_md5>"}]`, this example would return `304` if the local file md5 was the same as the object etag on the server.
   """
-  @spec get_object(String.t, String.t, String.t, Keyword.t) :: Openstack.t
+  @spec get_object(String.t, String.t, String.t, Keyword.t) :: Openstex.Swift.Query.t
   def get_object(server_object, container, account, opts \\ []) do
     headers = Keyword.get(opts, :headers, [])
     server_object = Openstex.Utils.remove_if_has_trailing_slash(server_object)
@@ -317,7 +317,7 @@ defmodule Openstex.Services.Swift.V1.Query do
   Large objects are categorized as those over 5GB in size.
   There are two ways of uploading large files - dynamic uploads and static uploads. See [here](http://docs.openstack.org/developer/swift/overview_large_objects.html#direct-api) for more information.
   """
-  @spec create_object(String.t, String.t, String.t, list) :: Openstack.t
+  @spec create_object(String.t, String.t, String.t, list) :: Openstex.Swift.Query.t
   def create_object(container, account, client_object_pathname, opts) do
     server_object = Keyword.get(opts, :server_object, Path.basename(client_object_pathname))
 
@@ -387,7 +387,7 @@ defmodule Openstex.Services.Swift.V1.Query do
       server_object = "server_file.txt"
       Openstex.Services.Swift.V1.Query.delete_object(server_object, container, account, server_object) |> client.request(query)
   """
-  @spec delete_object(String.t, String.t, String.t) :: Openstack.t
+  @spec delete_object(String.t, String.t, String.t) :: Openstex.Swift.Query.t
   def delete_object(server_object, container, account) do
     server_object = Openstex.Utils.remove_if_has_trailing_slash(server_object)
     %Query{
