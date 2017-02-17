@@ -56,9 +56,9 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Keystone do
     {:reply, :ok, {openstex_client, new_identity}}
   end
 
-  def handle_call(:update_identity, _from, {openstex_client, identity}) do
+  def handle_call(:update_identity, _from, {openstex_client, _identity}) do
     Og.context(__ENV__, :debug)
-    {:ok, new_identity} = Utils.create_identity(openstex_client) |> Map.put(identity, :lock, :false)
+    {:ok, new_identity} = Utils.create_identity(openstex_client) |> Map.put(:lock, :false)
     :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
     {:reply, :ok, {openstex_client, new_identity}}
   end
@@ -195,7 +195,7 @@ defmodule Openstex.Adapters.Ovh.Webstorage.Keystone do
   end
 
 
-  defp delay_until_config_started(openstex_client, max_delays \\ 100) do
+  defp delay_until_config_started(openstex_client) do
     config_agent = Module.concat(Openstex.Adapters.Ovh.Webstorage.Config, openstex_client)
     |> Og.log_return(__ENV__, :debug)
     unless config_agent in Process.registered() do

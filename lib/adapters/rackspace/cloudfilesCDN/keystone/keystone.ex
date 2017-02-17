@@ -55,9 +55,9 @@ defmodule Openstex.Adapters.Rackspace.CloudfilesCDN.Keystone do
     {:reply, :ok, {openstex_client, new_identity}}
   end
 
-  def handle_call(:update_identity, _from, {openstex_client, identity}) do
+  def handle_call(:update_identity, _from, {openstex_client, _identity}) do
     Og.context(__ENV__, :debug)
-    {:ok, new_identity} = Utils.create_identity(openstex_client) |> Map.put(identity, :lock, :false)
+    {:ok, new_identity} = Utils.create_identity(openstex_client) |> Map.put(:lock, :false)
     :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
     {:reply, :ok, {openstex_client, new_identity}}
   end

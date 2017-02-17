@@ -1,5 +1,12 @@
 # Changelog
 
+
+## v0.2.1
+
+[neutral changes]
+- Fix various compiler warnings
+
+
 ## v0.2.0
 
 - Add functions `delete_object/3`, `delete_object!/3`

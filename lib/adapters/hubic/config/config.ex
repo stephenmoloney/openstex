@@ -1,6 +1,5 @@
 defmodule Openstex.Adapters.Hubic.Config do
   @moduledoc :false
-  alias Openstex.HttpQuery
   use Openstex.Adapter.Config
 
 

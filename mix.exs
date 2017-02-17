@@ -30,14 +30,13 @@ defmodule Openstex.Mixfile do
     [
       # Production deps
       {:poison, "~> 2.0"},
-      {:httpoison, "~> 0.8.0"},
-#    {:calendar, "~> 0.13.2"},
-      {:calendar, "~> 0.14.0"},
+      {:httpoison, "~> 0.9"},
+      {:calendar, "~> 0.17"},
       {:mapail, github: "stephenmoloney/mapail", branch: "master"},
 
       # Docs deps
       {:markdown, github: "devinus/markdown", only: :dev},
-      {:ex_doc,  "~> 0.11", only: :dev}
+      {:ex_doc,  "~> 0.14", only: :dev}
     ]
   end
 

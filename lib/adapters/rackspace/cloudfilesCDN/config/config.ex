@@ -171,7 +171,7 @@ defmodule Openstex.Adapters.Rackspace.CloudfilesCDN.Config do
     case api_key do
 
       :nil ->
-        {:ok, resp} = Query.get_token(endpoint, username, password) |> Openstex.Request.request([], :nil)
+        {:ok, _resp} = Query.get_token(endpoint, username, password) |> Openstex.Request.request([], :nil)
 
       api_key ->
         body =
@@ -194,7 +194,7 @@ defmodule Openstex.Adapters.Rackspace.CloudfilesCDN.Config do
                   options: @default_options,
                   service: :openstack
                   }
-        {:ok, resp} = Openstex.Request.request(query, [], :nil)
+        {:ok, _resp} = Openstex.Request.request(query, [], :nil)
     end
     Keystone.parse_nested_map_into_identity_struct(identity_resp.body)
   end
