@@ -1,7 +1,7 @@
 defmodule Openstex.Mixfile do
   use Mix.Project
   @version "0.3.0"
-  @elixir "~> 1.3 or ~> 1.4 or ~> 1.5"
+  @elixir "~> 1.4 or ~> 1.5"
 
   def project do
     [
