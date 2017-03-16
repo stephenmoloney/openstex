@@ -24,8 +24,6 @@ defmodule Openstex.Keystone.V2.Helpers do
   """
   @spec authenticate(String.t, String.t, String.t, Keyword.t) :: {:ok, Identity.t} | {:error, HTTPipe.Conn.t} | {:error, any}
   def authenticate(endpoint, username, password, tenant) do
-    Og.log("***logging context***", __ENV__, :debug)
-
     token_request = Openstex.Keystone.V2.get_token(endpoint, username, password)
     identity_request = fn(token, endpoint, tenant) -> Openstex.Keystone.V2.get_identity(token, endpoint, tenant) end
 
@@ -54,7 +52,6 @@ defmodule Openstex.Keystone.V2.Helpers do
   """
   @spec authenticate(String.t, String.t,  Keyword.t) :: {:ok, Identity.t} | {:error, HTTPipe.Conn.t} | {:error, any}
   def authenticate(endpoint, token, tenant) do
-    Og.log("***logging context***", __ENV__, :debug)
     identity_request = fn(token, endpoint, tenant) -> Openstex.Keystone.V2.get_identity(token, endpoint, tenant) end
     case Request.request(identity_request.(token, endpoint, tenant), :nil) do
       {:ok, conn} -> {:ok, parse_nested_map_into_identity_struct(conn.response.body)}
@@ -102,8 +99,6 @@ defmodule Openstex.Keystone.V2.Helpers do
 
   @doc :false
   def parse_nested_map_into_identity_struct(identity_map) do
-    Og.log("***logging context***", __ENV__, :debug)
-
     identity = Map.fetch!(identity_map, "access")
     tenant = Map.fetch!(identity, "token")
     |> Map.fetch!("tenant")

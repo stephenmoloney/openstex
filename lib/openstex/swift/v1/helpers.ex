@@ -88,13 +88,11 @@ defmodule Openstex.Swift.V1.Helpers do
         end
 
         def delete_object(server_object, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           request = V1.delete_object(server_object, container, get_account())
           |> client().request()
         end
 
         def delete_object!(server_object, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case delete_object(server_object, container) do
             {:ok, conn} ->
               if conn.response.status_code == 204 and conn.response.body == "" do
@@ -127,7 +125,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec upload_file(String.t, String.t, String.t, list) :: {:ok, Response.t} | {:error, Response.t}
         def upload_file(file, server_object, container, upload_opts \\ []) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           upload_opts = upload_opts ++ [server_object: server_object]
           conn = V1.create_object(container, get_account(), file, upload_opts)
           client().request(conn)
@@ -140,7 +137,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec upload_file!(String.t, String.t, String.t, list) :: :ok | no_return
         def upload_file!(file, server_object, container, upload_opts \\ []) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case upload_file(file, server_object, container, upload_opts) do
             {:ok, conn} ->
               if conn.response.status_code in [200, 201] and conn.response.body == "" do
@@ -174,7 +170,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec download_file(String.t, String.t) :: {:ok, Response.t} | {:error, Response.t}
         def download_file(server_object, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           conn = V1.get_object(server_object, container, get_account())
           client().request(conn)
         end
@@ -186,7 +181,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec download_file!(String.t, String.t) :: :binary | no_return
         def download_file!(server_object, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case download_file(server_object, container) do
             {:ok, conn} -> conn.response.body
             {:error, conn} ->
@@ -205,7 +199,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_objects(String.t) :: {:ok, list} | {:error, map}
         def list_objects(container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           list_objects("", container, [nested: :true])
         end
 
@@ -219,7 +212,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_objects!(String.t) :: list | no_return
         def list_objects!(container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           list_objects!("", container, [nested: :true])
         end
 
@@ -263,7 +255,6 @@ defmodule Openstex.Swift.V1.Helpers do
         def list_objects(pseudofolder, container, opts \\ [])
 
         def list_objects(pseudofolder, container, [nested: :true]) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           with {:ok, pseudofolders} <- list_pseudofolders(pseudofolder, container, [nested: :true]), do: (
             pseudofolders = [ pseudofolder  | pseudofolders ]
             objects = Enum.reduce(pseudofolders, [], fn(pseudofolder, acc) ->
@@ -275,14 +266,12 @@ defmodule Openstex.Swift.V1.Helpers do
           )
         end
         def list_objects(pseudofolder, container, [nested: :false]) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case  get_objects_only_in_pseudofolder(pseudofolder, container, get_account()) do
             {:ok, objects} -> {:ok, objects}
             {:error, conn} -> {:error, conn}
           end
         end
         def list_objects(pseudofolder, container, []) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           list_objects(pseudofolder, container, [nested: :false])
         end
 
@@ -293,7 +282,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_objects!(String.t, String.t, list) :: {:ok, list} | no_return
         def list_objects!(folder, container, opts \\ []) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case list_objects(folder, container, opts) do
             {:ok, objects} -> objects
             {:error, conn} -> raise(Openstex.ResponseError, conn: conn)
@@ -310,7 +298,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_pseudofolders(String.t) :: {:ok, list} | {:error, Openstex.Response.t}
         def list_pseudofolders(container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           list_pseudofolders("", container, [nested: :true])
         end
 
@@ -325,7 +312,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_pseudofolders(String.t, String.t) :: {:ok, list} | {:error, Openstex.Response.t}
         def list_pseudofolders(pseudofolder, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           list_pseudofolders(pseudofolder, container, [])
         end
 
@@ -366,7 +352,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_pseudofolders(String.t, String.t, list) :: {:ok, list} | {:error, HTTPipe.Conn.t}
         def list_pseudofolders(pseudofolder, container, opts) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           nested? = Keyword.get(opts, :nested, :false)
           pseudofolder = Openstex.Utils.ensure_has_leading_slash(pseudofolder)
           |> Openstex.Utils.remove_if_has_trailing_slash()
@@ -377,7 +362,6 @@ defmodule Openstex.Swift.V1.Helpers do
             :false ->
               case client().request(conn) do
                 {:ok, conn} ->
-                  Og.klog(conn, __ENV__, :info)
                   body = if conn.response.body == "", do: [], else: conn.response.body
                   folders = filter_non_pseudofolders(body)
                   {:ok, folders}
@@ -397,7 +381,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_pseudofolders!(String.t) :: list | no_return
         def list_pseudofolders!(container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           list_pseudofolders!("", container, [nested: :true])
         end
 
@@ -412,7 +395,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_pseudofolders!(String.t, String.t) :: list | no_return
         def list_pseudofolders!(pseudofolder, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           list_pseudofolders!(pseudofolder, container, [])
         end
 
@@ -422,7 +404,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_pseudofolders!(String.t, String.t, list) :: list| no_return
         def list_pseudofolders!(pseudofolder, container, opts) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case list_pseudofolders(pseudofolder, container, opts) do
             {:ok, objects} -> objects
             {:error, conn} -> raise(Openstex.ResponseError, conn: conn)
@@ -440,7 +421,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec pseudofolder_exists?(String.t, String.t) :: boolean | no_return
         def pseudofolder_exists?(pseudofolder, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case list_objects(pseudofolder, container) do
             {:ok, []} ->
               :false
@@ -468,7 +448,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec delete_pseudofolder(String.t, String.t) :: :ok | {:error, list}
         def delete_pseudofolder(pseudofolder, container) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           if pseudofolder_exists?(pseudofolder, container) do
             responses = list_objects!(pseudofolder, container, [nested: :true])
             |> Enum.map(fn(obj) ->
@@ -526,8 +505,6 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec generate_temp_url(String.t, String.t, list) :: String.t
         def generate_temp_url(container, server_object, opts \\ []) do
-          Og.klog("**Logging Context**", __ENV__, :info)
-
           temp_url_key = get_account_tempurl_key(:key1)
           temp_url_expires_after = Keyword.get(opts, :temp_url_expires_after, (5 * 60))
           temp_url_filename = Keyword.get(opts, :temp_url_filename, :false)
@@ -550,7 +527,6 @@ defmodule Openstex.Swift.V1.Helpers do
 
 
         defp get_objects_only_in_pseudofolder(obj, container, account) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           obj = Openstex.Utils.ensure_has_leading_slash(obj)
           |> Openstex.Utils.remove_if_has_trailing_slash()
           request = V1.get_objects_in_folder(obj, container, account)
@@ -570,7 +546,6 @@ defmodule Openstex.Swift.V1.Helpers do
 
 
         defp get_pseudofolders(obj, container, account) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           obj = Openstex.Utils.ensure_has_leading_slash(obj)
           |> Openstex.Utils.remove_if_has_trailing_slash()
           V1.get_objects_in_folder(obj, container, account)
@@ -584,7 +559,6 @@ defmodule Openstex.Swift.V1.Helpers do
 
 
         defp filter_non_pseudofolders(objects) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           Enum.filter_map(objects,
             fn(e) -> e["subdir"] != :nil end,
             fn(e) ->  e["subdir"] end
@@ -593,7 +567,6 @@ defmodule Openstex.Swift.V1.Helpers do
 
 
         defp recurse_pseudofolders(%HTTPipe.Conn{} = conn, container, account) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           case client().request(conn) do
             {:ok, conn} ->
               folders = filter_non_pseudofolders(conn.response.body)
@@ -614,7 +587,6 @@ defmodule Openstex.Swift.V1.Helpers do
           recurse_pseudofolders(folders, [], container, account)
         end
         defp recurse_pseudofolders([ f | folders ], acc, container, account) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           deeper_nested = get_pseudofolders(f, container, account)
           case deeper_nested == [] do
             :true ->
@@ -632,7 +604,6 @@ defmodule Openstex.Swift.V1.Helpers do
 
 
         defp put_temp_url_key(key, header, key_number) do
-          Og.klog("**Logging Context**", __ENV__, :info)
           %HTTPipe.Request{method: :post, url: get_account()}
           |> client().prepare_request()
           |> HTTPipe.Conn.put_req_header(header, key)

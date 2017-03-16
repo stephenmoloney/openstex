@@ -366,8 +366,6 @@ defmodule Openstex.Swift.V1 do
         Map.put(HTTPipe.Conn.new(), :request, req)
         |> Body.apply(binary_object)
       {:error, posix_error} ->
-        Og.log("***logging context***", __ENV__, :error)
-        Og.log_r(posix_error, :error)
         posix_error
     end
   end

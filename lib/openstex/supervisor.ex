@@ -5,14 +5,12 @@ defmodule Openstex.Supervisor do
   #  Public
 
   def start_link(client, opts \\ []) do
-    Og.log("***logging context***", __ENV__, :debug)
     Supervisor.start_link(__MODULE__, {client, opts}, name: supervisor_name(client))
   end
 
   #  Callbacks
 
   def init({client, opts}) do
-    Og.log("***logging context***", __ENV__, :debug)
     config = client.config()
     keystone = client.keystone()
 

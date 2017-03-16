@@ -33,7 +33,6 @@ defmodule Openstex.Mixfile do
       {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
       {:mapail, "~> 0.2"},
       {:httpipe, "~> 0.9"},
-      {:og, ">= 0.2.4"},
 
       # dev deps
       {:markdown, github: "devinus/markdown", only: [:dev]},
