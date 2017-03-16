@@ -31,8 +31,8 @@ defmodule Openstex.Mixfile do
     [
       # deps
       {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
-      {:mapail, path: "../mapail"},
-      {:httpipe, "~> 0.9", override: :true},
+      {:mapail, "~> 0.2"},
+      {:httpipe, "~> 0.9"},
       {:og, ">= 0.2.4"},
 
       # dev deps
