@@ -10,7 +10,6 @@ defmodule Openstex.Adapters.Bypass.Config do
 
 
   def start_agent(client, opts) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     otp_app = Keyword.get(opts, :otp_app, :false) || raise("Client has not been configured correctly, missing `:otp_app`")
     identity = create_identity(client, otp_app)
     Agent.start_link(fn -> config(client, otp_app, identity) end, name: agent_name(client))
@@ -106,7 +105,6 @@ defmodule Openstex.Adapters.Bypass.Config do
 
 
   defp create_identity(client, _otp_app) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     # return identity struct
     Openstex.Adapters.Bypass.Keystone.Utils.create_identity(client)
   end

@@ -10,7 +10,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
   # Public Openstex.Adapter.Keystone callbacks
 
   def start_link(openstex_client) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     GenServer.start_link(__MODULE__, openstex_client, [name: openstex_client])
   end
 
@@ -29,7 +28,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
   # Genserver Callbacks
 
   def init(openstex_client) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     :erlang.process_flag(:trap_exit, :true)
     create_ets_table(openstex_client)
     identity = Utils.create_identity(openstex_client)
@@ -41,13 +39,11 @@ defmodule Openstex.Adapters.Bypass.Keystone do
 
 
   def handle_call(:add_lock, _from, {openstex_client, identity, timer_ref}) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     new_identity = Map.put(identity, :lock, :true)
     :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
     {:reply, :ok, {openstex_client, identity, timer_ref}}
   end
   def handle_call(:update_identity, _from, {openstex_client, identity, timer_ref}) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     {:reply, :ok, _identity} = GenServer.call(self(), :add_lock)
     {:ok, new_identity} = Utils.create_identity(openstex_client) |> Map.put(:lock, :false)
     :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
@@ -56,13 +52,11 @@ defmodule Openstex.Adapters.Bypass.Keystone do
     {:reply, :ok, {openstex_client, identity, timer_ref}}
   end
   def handle_call(:stop, _from, state) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     {:stop, :shutdown, :ok, state}
   end
 
 
   def handle_info(:update_identity, _from, _state) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     {:reply, :ok, _identity} = GenServer.call(self(), :update_identity)
   end
   def handle_info(_, state), do: {:ok, state}
@@ -71,7 +65,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
 
 
   def terminate(_reason, {openstex_client, _identity, _timer_ref}) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     :ets.delete(ets_tablename(openstex_client))
     :ok
   end
@@ -84,8 +77,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
     get_identity(openstex_client, 0)
   end
   defp get_identity(openstex_client, index) do
-    Og.klog("**Logging context**", __ENV__, :debug)
-
     retry = fn(openstex_client, index) ->
       if index > @get_identity_retries do
         raise "Cannot retrieve openstack identity, #{__ENV__.module}, #{__ENV__.line}, client: #{openstex_client}"
@@ -125,7 +116,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
 
 
   defp create_ets_table(openstex_client) do
-    Og.klog("**Logging context**", __ENV__, :debug)
     ets_options = [
                    :set, # type
                    :protected, # read - all, write this process only.
