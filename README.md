@@ -57,6 +57,13 @@ All of the above Adapters provide access to Swift Object Storage services which 
 [Openstack api reference](http://developer.openstack.org/api-ref.html)
 
 
+## TODO
+
+- [ ] improve the docs for some of the functions
+- [ ] add tests for genserver workings in `Openstex.Adapters.Bypass.Keystone`
+- [ ] add tests for `Openstex.Keystone.V2.HelpersTest`
+`
+
 ## Licence
 
 [MIT Licence](LICENCE.md)

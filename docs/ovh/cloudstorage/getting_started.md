@@ -1,22 +1,31 @@
 ## Getting started - OVH Cloudstorage
 
-- Add `:ex_ovh` and `openstex` to your project list of dependencies.
+
+### Installation
+
+- Add `:ex_ovh` and `:openstex` to your project list of dependencies.
 
 ```elixir
 defp deps() do
   [
-  {:ex_ovh, "~> 0.1.0"},
-  {:openstex, github: "stephenmoloney/openstex", tag: "0.1"}
+    {:ex_ovh, "~> 0.2"},
+    {:openstex, github: "stephenmoloney/openstex"}
   ]
 end
 ```
+
+### Add
+
+### Configure ExOvh Client
 
 - Configure an ExOvh Client
 
     - Create an OVH account at [OVH](https://www.ovh.com/)
 
     - Create an API application at the [OVH API page](https://eu.api.ovh.com/createApp/). Follow the
-      steps outlined by OVH there. Alternatively, there is a [mix task](https://github.com/stephenmoloney/ex_ovh/blob/master/docs/mix_task_advanced.md) which can help
+      steps outlined by OVH there.
+
+    - Alternatively, there is a [mix task](https://github.com/stephenmoloney/ex_ovh/blob/master/docs/mix_task.md) which can help
       generate the OVH application.
 
     - The mix task (if used) will generate a config file as follows:
@@ -32,48 +41,8 @@ config :my_app, MyApp.Cloudstorage,
 
 - Add additional configuration as needed or as known.
 
-```elixir
-config :my_app, MyApp.Cloudstorage,
-  adapter: Openstex.Adapters.Ovh.Cloudstorage.Adapter,
-  ovh: [
-    application_key: System.get_env("MY_APP_CLOUDSTORAGE_APPLICATION_KEY"),
-    application_secret: System.get_env("MY_APP_CLOUDSTORAGE_APPLICATION_SECRET"),
-    consumer_key: System.get_env("MY_APP_CLOUDSTORAGE_CONSUMER_KEY"),
-    endpoint: "ovh-eu",
-    api_version: "1.0"
-  ],
-  keystone: [
-    tenant_id: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TENANT_ID"), # mandatory, corresponds to an ovh project id or ovh servicename
-    user_id: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_USER_ID"), # optional, if absent a user will be created using the ovh api.
-    endpoint: "https://auth.cloud.ovh.net/v2.0"
-  ],
-  swift: [
-    account_temp_url_key1: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY1"), # defaults to :nil if absent
-    account_temp_url_key2: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY2"), # defaults to :nil if absent
-    region: :nil # defaults to "SBG1" if not set.
-  ],
-  httpoison: [
-    connect_timeout: 20000,
-    receive_timeout: 180000
-  ]
-```
 
-- Ensure that the following variables are available as environment variables. The `mix ovh` task generates a `.env` file
-which can optionally be used for this purpose. *NOTE:* Make sure `.env` is never added to version control.
-
-```shell
-export MY_APP_CLOUDSTORAGE_APPLICATION_KEY=<KEY>
-export MY_APP_CLOUDSTORAGE_APPLICATION_SECRET=<SECRET>
-export MY_APP_CLOUDSTORAGE_CONSUMER_KEY=<KEY>
-export MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TENANT_ID=<TENANT_ID>
-export MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY1=<KEY1>
-export MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY2=<KEY2>
-```
-
-- Add the environment variables to the enviroment. Eg run ```source .env```
-
-- Add a client to your project.
-
+### Add client modules to your elixir application
 
 ```elixir
 defmodule MyApp.Cloudstorage do
@@ -92,7 +61,74 @@ defmodule MyApp.Cloudstorage do
 end
 ```
 
-- Add the client (`Openstex.Cloudstorage`) to your project supervision tree.
+
+### Configure Cloudstorage client (ovh openstack client)
+
+```elixir
+config :my_app, MyApp.Cloudstorage,
+  adapter: Openstex.Adapters.Ovh.Cloudstorage.Adapter,
+  ovh: [
+    application_key: System.get_env("MY_APP_CLOUDSTORAGE_APPLICATION_KEY"),
+    application_secret: System.get_env("MY_APP_CLOUDSTORAGE_APPLICATION_SECRET"),
+    consumer_key: System.get_env("MY_APP_CLOUDSTORAGE_CONSUMER_KEY"),
+    endpoint: "ovh-eu", # optional
+    api_version: "1.0" # optional
+  ],
+  keystone: [
+    tenant_id: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TENANT_ID"), # mandatory, corresponds to an ovh project id or ovh servicename
+    user_id: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_USER_ID"), # optional, if absent a user will be created using the ovh api.
+    endpoint: "https://auth.cloud.ovh.net/v2.0"
+  ],
+  swift: [
+    account_temp_url_key1: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY1"), # defaults to :nil if absent
+    account_temp_url_key2: System.get_env("MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY2"), # defaults to :nil if absent
+    region: :nil # defaults to "SBG1" if not set.
+  ]
+```
+
+- ***Note:*** The `MY_APP_CLOUDSTORAGE` maps to the module name `MyApp.Cloudstorage`.
+`MY_APP_CLOUDSTORAGE` <==> `MyApp.Cloudstorage`
+
+
+Optionally add the `httpoison` settings to the above:
+```
+httpoison: [
+  connect_timeout: 20000,
+  receive_timeout: 180000
+]
+```
+
+- Ensure that the following variables are available as environment variables.
+
+```shell
+export MY_APP_CLOUDSTORAGE_APPLICATION_KEY=<KEY>
+export MY_APP_CLOUDSTORAGE_APPLICATION_SECRET=<SECRET>
+export MY_APP_CLOUDSTORAGE_CONSUMER_KEY=<KEY>
+
+export MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TENANT_ID=<TENANT_ID>
+export MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_USER_ID=<USER_ID>
+export MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY1=<KEY1>
+export MY_APP_CLOUDSTORAGE_CLOUDSTORAGE_TEMP_URL_KEY2=<KEY2>
+```
+
+- Add the environment variables to the enviroment. Eg run ```source .env```
+
+- To configure the first `application key`, `application_secret` and `consumer_key` environment variables,
+it's easier to use the [mix task](https://github.com/stephenmoloney/ex_ovh/blob/master/docs/mix_task.md).
+The following variables will then be added to `.env` by the mix task.
+```
+export MY_APP_CLOUDSTORAGE_APPLICATION_KEY=<KEY>
+export MY_APP_CLOUDSTORAGE_APPLICATION_SECRET=<SECRET>
+export MY_APP_CLOUDSTORAGE_CONSUMER_KEY=<KEY>
+```
+
+- To get the `tenant_id`, user [ex_ovh](https://hex.pm/packages/ex_ovh):
+```
+ExOvh.Services.V1.Cloud.Query.list_services() |> MyApp.Cloudstorage.Ovh.request!()
+```
+
+
+### Add the cloudstorage client (`Openstex.Cloudstorage`) to your project supervision tree.
 
 
 ```elixir

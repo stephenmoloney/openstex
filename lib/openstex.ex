@@ -1,6 +1,6 @@
 defmodule Openstex do
   @moduledoc ~S"""
-  Setting up clients for use with openstex.
+  Examples setting up clients for use with openstex.
 
   ## OVH Cloudstorage Client
 
@@ -8,27 +8,9 @@ defmodule Openstex do
         @moduledoc :false
         use Openstex.Client, otp_app: :openstex, client: __MODULE__
 
-        defmodule SwiftHelpers do
+        defmodule Swift do
           @moduledoc :false
-          use Openstex.Services.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudstorage
-        end
-
-        defmodule Ovh do
-          @moduledoc :false
-          use ExOvh.Client, otp_app: :openstex, client: __MODULE__
-        end
-      end
-
-
-  ## Ovh Webstorage CDN Client
-
-      defmodule Openstex.Webstorage do
-        @moduledoc :false
-        use Openstex.Client, otp_app: :openstex, client: __MODULE__
-
-        defmodule SwiftHelpers do
-          @moduledoc :false
-          use Openstex.Services.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Webstorage
+          use Openstex.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudstorage
         end
 
         defmodule Ovh do
@@ -44,9 +26,9 @@ defmodule Openstex do
         @moduledoc :false
         use Openstex.Client, otp_app: :openstex, client: __MODULE__
 
-        defmodule SwiftHelpers do
+        defmodule Swift do
           @moduledoc :false
-          use Openstex.Services.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudfiles
+          use Openstex.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudfiles
         end
       end
 
@@ -57,9 +39,9 @@ defmodule Openstex do
         @moduledoc :false
         use Openstex.Client, otp_app: :openstex, client: __MODULE__
 
-        defmodule SwiftHelpers do
+        defmodule Swift do
           @moduledoc :false
-          use Openstex.Services.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudfiles.CDN
+          use Openstex.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudfiles.CDN
         end
       end
 
@@ -70,9 +52,9 @@ defmodule Openstex do
         @moduledoc :false
         use Openstex.Client, otp_app: :openstex, client: __MODULE__
 
-        defmodule SwiftHelpers do
+        defmodule Swift do
           @moduledoc :false
-          use Openstex.Services.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.ExHubic
+          use Openstex.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.ExHubic
         end
 
         defmodule Hubic do

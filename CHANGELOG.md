@@ -1,11 +1,20 @@
 # Changelog
 
 
-## v0.2.1
+## v0.3.0
 
 [neutral changes]
 - Fix various compiler warnings
+- Add tests using bypass (openstex_test repository will be deprecated)
+- Remove dependency on the excellent `lau/calendar` as elixir core now contains required functions.
+- Upgrade dependencies
 
+[breaking changes]
+- Remove the `defprotocol` abstraction and simplify. While protocols were a nice idea, it is
+overengineered for the time being.
+- Separate the adapters out of the repository into their own repos, namely:
+  - `openstex_adapters_rackspace`
+  - `openstex_adapters_ovh`
 
 ## v0.2.0
 
