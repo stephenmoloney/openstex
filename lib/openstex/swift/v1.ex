@@ -8,9 +8,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
-      Openstex.Swift.V1.account_info(account) |> ExHubic.request()
+      Openstex.Swift.V1.account_info(account) |> ExOvh.request()
   """
   alias Openstex.Transformation.{Body, Url}
 
@@ -26,9 +26,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       Openstex.Swift.V1.account_info(account) |> client.request()
   """
@@ -79,9 +79,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       Openstex.Swift.V1.create_container("new_container", account) |> client.request()
   """
@@ -144,9 +144,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       headers = []
       Openstex.Swift.V1.modify_container("new_container", account, headers) |> client.request()
@@ -166,9 +166,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       Openstex.Swift.V1.delete_container("new_container", account) |> client.request(query)
   """
@@ -192,9 +192,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       query = Openstex.Swift.V1.container_info("new_container", account) |> client.request()
   """
@@ -221,9 +221,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       Openstex.Swift.V1.get_objects("new_container", account) |> client.request()
   """
@@ -248,9 +248,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       server_object = "server_file.txt"
       container = "new_container"
@@ -287,9 +287,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       container = "new_container"
       object_name = "client_file.txt"
@@ -380,9 +380,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       container = "new_container"
       server_object = "server_file.txt"
@@ -418,9 +418,9 @@ defmodule Openstex.Swift.V1 do
 
   ## Example
 
-  as implemented by the `ExHubic` library
+  as implemented a client from the `ExOvh` library
 
-      client = ExHubic.Swift
+      client = OvhClient.Swift
       account = client.swift().get_account()
       Openstex.Swift.V1.get_objects_in_folder("test_folder/", "default", account) |> client.request(query)
   """

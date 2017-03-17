@@ -4,7 +4,7 @@ defmodule Openstex.Keystone.V2 do
 
   ## Example
 
-      Openstex.Keystone.V2.get_token(endpoint, username, password) |> ExHubic.request!()
+      Openstex.Keystone.V2.get_token(endpoint, username, password) |> OvhClient.request!()
   """
   alias Openstex.Transformation.Body
   @default_headers %{"Content-Type" => "application/json; charset=utf-8"}
@@ -20,7 +20,7 @@ defmodule Openstex.Keystone.V2 do
 
   ## Example
 
-      Openstex.Keystone.V2.get_token(endpoint, username, password) |> ExHubic.request!()
+      Openstex.Keystone.V2.get_token(endpoint, username, password) |> OvhClient.request!()
   """
   @spec get_token(String.t, String.t, String.t) :: HTTPipe.Conn.t
   def get_token(endpoint, username, password) do
@@ -56,7 +56,7 @@ defmodule Openstex.Keystone.V2 do
 
   ## Example
 
-      Openstex.Keystone.V2.get_identity(token, endpoint, [tenant_id: "tenant_id"]) |> ExHubic.request!()
+      Openstex.Keystone.V2.get_identity(token, endpoint, [tenant_id: "tenant_id"]) |> OvhClient.request!()
   """
   @spec get_identity(String.t, String.t, Keyword.t) :: HTTPipe.Conn.t | no_return
   def get_identity(token, endpoint, tenant) when tenant == [] do

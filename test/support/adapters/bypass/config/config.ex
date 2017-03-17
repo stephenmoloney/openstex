@@ -1,8 +1,8 @@
 defmodule Openstex.Adapters.Bypass.Config do
   @moduledoc :false
-  @default_headers [{"Content-Type", "application/json; charset=utf-8"}] |> Enum.into(%{})
-  @default_options [timeout: 10000, recv_timeout: 30000]
-  @default_adapter HTTPipe.Adapters.Hackney
+#  @default_headers [{"Content-Type", "application/json; charset=utf-8"}] |> Enum.into(%{})
+#  @default_options [timeout: 10000, recv_timeout: 30000]
+#  @default_adapter HTTPipe.Adapters.Hackney
   use Openstex.Adapter.Config
 
 

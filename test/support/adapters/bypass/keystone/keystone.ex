@@ -5,6 +5,7 @@ defmodule Openstex.Adapters.Bypass.Keystone do
   @behaviour Openstex.Adapter.Keystone
   @get_identity_retries 5
   @get_identity_interval 1000
+  @update_identity_buffer 0
 
 
   # Public Openstex.Adapter.Keystone callbacks
@@ -31,39 +32,21 @@ defmodule Openstex.Adapters.Bypass.Keystone do
     :erlang.process_flag(:trap_exit, :true)
     create_ets_table(openstex_client)
     identity = Utils.create_identity(openstex_client)
-    identity = Map.put(identity, :lock, :false)
     :ets.insert(ets_tablename(openstex_client), {:identity, identity})
-    timer_ref = Process.send_after(self(), :update_identity, get_seconds_to_expiry(identity))
+    milliseconds_to_expiry = (get_seconds_to_expiry(identity) * 1000) - @update_identity_buffer
+    timer_ref = Process.send_after(self(), :update_identity, milliseconds_to_expiry)
     {:ok, {openstex_client, identity, timer_ref}}
   end
 
-
-  def handle_call(:add_lock, _from, {openstex_client, identity, timer_ref}) do
-    new_identity = Map.put(identity, :lock, :true)
-    :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
-    {:reply, :ok, {openstex_client, identity, timer_ref}}
-  end
   def handle_call(:update_identity, _from, {openstex_client, identity, timer_ref}) do
-    {:reply, :ok, _identity} = GenServer.call(self(), :add_lock)
-    {:ok, new_identity} = Utils.create_identity(openstex_client) |> Map.put(:lock, :false)
-    :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
-    :timer.cancel(timer_ref)
-    timer_ref = Process.send_after(self(), :update_identity, get_seconds_to_expiry(new_identity))
-    {:reply, :ok, {openstex_client, identity, timer_ref}}
+    {:reply, :ok, update_identity({openstex_client, identity, timer_ref})}
   end
-  def handle_call(:stop, _from, state) do
-    {:stop, :shutdown, :ok, state}
+  def handle_info(:update_identity, {openstex_client, identity, timer_ref}) do
+    {:noreply, update_identity({openstex_client, identity, timer_ref})}
   end
-
-
-  def handle_info(:update_identity, _from, _state) do
-    {:reply, :ok, _identity} = GenServer.call(self(), :update_identity)
+  def handle_info(_info, {openstex_client, identity, timer_ref}) do
+    {:noreply, {openstex_client, identity, timer_ref}}
   end
-  def handle_info(_, state), do: {:ok, state}
-
-
-
-
   def terminate(_reason, {openstex_client, _identity, _timer_ref}) do
     :ets.delete(ets_tablename(openstex_client))
     :ok
@@ -90,16 +73,22 @@ defmodule Openstex.Adapters.Bypass.Keystone do
       table = :ets.lookup(ets_tablename(openstex_client), :identity)
       case table do
         [identity: identity] ->
-          if identity.lock == :true do
-            retry.(openstex_client, index)
-          else
-            identity
-          end
+          identity
         [] -> retry.(openstex_client, index)
       end
     else
       retry.(openstex_client, index)
     end
+  end
+
+
+  defp update_identity({openstex_client, _identity, timer_ref}) do
+    new_identity = Utils.create_identity(openstex_client)
+    :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
+    milliseconds_to_expiry = (get_seconds_to_expiry(new_identity) * 1000) - @update_identity_buffer
+    :timer.cancel(timer_ref)
+    timer_ref = Process.send_after(self(), :update_identity, milliseconds_to_expiry)
+    {openstex_client, new_identity, timer_ref}
   end
 
 

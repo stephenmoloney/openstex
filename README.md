@@ -2,7 +2,7 @@
 
 An elixir client for making requests to [Openstack compliant apis](http://developer.openstack.org/api-ref.html).
 
-#### Supported services
+### Supported services
 
 | Openstack Service | Supported |
 |---|---|
@@ -10,41 +10,66 @@ An elixir client for making requests to [Openstack compliant apis](http://develo
 | Object Storage 1.0 (Swift) | :heavy_check_mark: |
 
 
-## Features
+### Features
 
-1. Query modules for generating query structs which can subsequently be sent to the API using a `request` function.
-Example: *Creating a container:* [create_container/3](https://github.com/stephenmoloney/openstex/blob/master/lib/services/swift/v1/query.ex#L88).
 
-2. Helper modules for
+### 1. Request modules for generating `HTTPipe.Conn.t` structs which can subsequently be sent
+to the API using a `request` function.
 
-    a. One liners for sending queries to the client API. Example: *Getting the swift public url:* [get_public_url/0](https://github.com/stephenmoloney/openstex/blob/master/lib/services/swift/v1/helpers.ex#L21)
+- Example - creating a new container
 
-    b. Sending more complex queries such as multi-step queries to the client API. Example: *Getting all objects in a pseudofolder:* [list_objects/3](https://github.com/stephenmoloney/openstex/blob/master/lib/services/swift/v1/helpers.ex#L247)
+```elixir
+  account = Client.Swift.get_account()
+  conn = Openstex.Swift.V1.create_container("new_container", account)
+  client.request(conn)
+```
 
-3. The `Request.request/3` and `Transformation.request/3` protocols and associated implementations that send the queries and process the response.
-Theoretically, the protocol can be extended so that queries are processed in a different manner is so required later during development
-for particular request types.
 
-4. Adapter modules for [OVH Webstorage CDN](https://www.ovh.com/fr/cdn/webstorage/), [OVH Cloudstorage](https://www.ovh.ie/cloud/storage/),
-[Hubic](https://hubic.com/en/), [Rackspace Cloudfiles](https://www.rackspace.com/cloud/files)
-and [Rackspace Cloudfiles CDN](https://www.rackspace.com/cloud/cdn-content-delivery-network).
+### 2. Helper modules for
+
+a. One liners for sending queries to the client API.
+
+- Example - Uploading a file
+
+```elixir
+  file_path = Path.join(Path.expand(__DIR__, "priv/test.json")
+  Client.Swift.upload_file(file_path, server_object, container,
+```
+
+b. Sending more complex queries such as multi-step queries to the client API.
+
+- Example - Getting all objects in a pseudofolder recursively, `[nested: :true]` will
+check for objects recursively in deeper folders.
+
+```elixir
+  file_path = Path.join(Path.expand(__DIR__, "priv/test.json")
+  Client.Swift.list_objects("nested_folder", "new_container", [nested: :true])
+```
+
+
+### 3. Adapter modules for
+
+- [OVH Cloudstorage](https://www.ovh.ie/cloud/storage/)
+- [Rackspace Cloudfiles CDN](https://www.rackspace.com/cloud/cdn-content-delivery-network).
+- [Rackspace Cloudfiles](https://www.rackspace.com/cloud/files)
+- [Hubic](https://hubic.com/en/)
+
+
 All of the above Adapters provide access to Swift Object Storage services which are (mostly) openstack compliant.
+
 
 
 ## Installation and Getting Started
 
 | Adapter | Getting started |
 |---|---|
-| [Ovh Cloudstorage Adapter](https://github.com/stephenmoloney/openstex/blob/master/lib/adapters/ovh/cloudstorage/adapter.ex) | [docs/ovh/cloudstorage/getting_started.md](https://github.com/stephenmoloney/openstex/blob/master/docs/ovh/cloudstorage/getting_started.md) |
+| Ovh Adapter | [openstex_adapters_ovh](https://github.com/stephenmoloney/openstex/blob/master/lib/adapters/ovh/cloudstorage/adapter.ex) |
 
-
-# Usage
-
-- Examples to be added. (for now see [openstex tests](https://github.com/stephenmoloney/openstex_test/tree/master/test))
 
 ## Tests
 
-- To avoid circular dependency issues, tests are run from a separate repository [openstex_tests](https://github.com/stephenmoloney/openstex_test).
+- `mix test`
+
 
 ## Available Services
 
@@ -62,6 +87,7 @@ All of the above Adapters provide access to Swift Object Storage services which 
 - [ ] improve the docs for some of the functions
 - [ ] add tests for genserver workings in `Openstex.Adapters.Bypass.Keystone`
 - [ ] add tests for `Openstex.Keystone.V2.HelpersTest`
+- [ ] add tests for `Openstex.Swift.V1` with the execution of the `HTTPipe.Conn` structs with bypass.
 `
 
 ## Licence

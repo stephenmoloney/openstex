@@ -121,7 +121,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
             file = "/priv/test_file.json"
             server_object = "ex_hubic_tests/nested/test_file.json"
-            ExHubic.Swift.upload_file(file, server_object, "default")
+            OvhClient.Swift.upload_file(file, server_object, "default")
         """
         @spec upload_file(String.t, String.t, String.t, list) :: {:ok, Response.t} | {:error, Response.t}
         def upload_file(file, server_object, container, upload_opts \\ []) do
@@ -166,7 +166,7 @@ defmodule Openstex.Swift.V1.Helpers do
         ## Example
 
             server_object = "/ex_hubic_tests/nested/test_file.json"
-            ExHubic.Swift.download_file(server_object, "default")
+            OvhClient.Swift.download_file(server_object, "default")
         """
         @spec download_file(String.t, String.t) :: {:ok, Response.t} | {:error, Response.t}
         def download_file(server_object, container) do
@@ -243,13 +243,13 @@ defmodule Openstex.Swift.V1.Helpers do
         ## Example
 
         Returns all objects in the `"test_folder/"` but not objects in nested pseudofolders
-            ExHubic.Swift.list_objects("test_folder/", "default", [nested: :false])
+            OvhClient.Swift.list_objects("test_folder/", "default", [nested: :false])
 
         Returns all objects in the `"test_folder/"` and all nested pseudofolders.
-            ExHubic.Swift.list_objects("test_folder/", "default", [nested: :true])
+            OvhClient.Swift.list_objects("test_folder/", "default", [nested: :true])
 
         Returns all objects in the `"default"` container
-          ExHubic.Swift.list_objects("default", [nested: :true])
+          OvhClient.Swift.list_objects("default", [nested: :true])
         """
         @spec list_objects(String.t, String.t, list) :: {:ok, list} | {:error, map}
         def list_objects(pseudofolder, container, opts \\ [])
@@ -342,13 +342,13 @@ defmodule Openstex.Swift.V1.Helpers do
         ## Example
 
         Gets all pseudofolders in the `"test_folder/"` pseudofolder one level deep (top level)
-            ExHubic.Swift.list_pseudofolders("test_folder/", "default")
+            OvhClient.Swift.list_pseudofolders("test_folder/", "default")
 
         Gets all pseudofolders in the `"test/"` pseudofolder one level deep (top level)
-            ExHubic.Swift.list_pseudofolders("test", "default")
+            OvhClient.Swift.list_pseudofolders("test", "default")
 
         Gets all the pseudofolders in the container and traverse to the deepest nested pseudofolders
-            ExHubic.Swift.list_pseudofolders(default", [nested: :true])
+            OvhClient.Swift.list_pseudofolders(default", [nested: :true])
         """
         @spec list_pseudofolders(String.t, String.t, list) :: {:ok, list} | {:error, HTTPipe.Conn.t}
         def list_pseudofolders(pseudofolder, container, opts) do
@@ -484,7 +484,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
         ## Example
 
-            OpenstexTest.OvhClient.Swift.Cloudstorage.generate_temp_url("test_container", "test_file.txt", [])
+            OvhClient.Swift.generate_temp_url("test_container", "test_file.txt", [])
 
         ## Arguments
 
@@ -659,7 +659,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
         file = "/priv/test_file.json"
         server_object = "/ex_hubic_tests/nested/test_file.json"
-        ExHubic.Swift.upload_file(file, server_object, "default")
+        OvhClient.Swift.upload_file(file, server_object, "default")
     """
     @callback upload_file(String.t, String.t, String.t, list) :: {:ok, Response.t} | {:error, Response.t}
 
@@ -683,7 +683,7 @@ defmodule Openstex.Swift.V1.Helpers do
     ## Example
 
         server_object = "/ex_hubic_tests/nested/test_file.json"
-        ExHubic.Swift.download_file(server_object, "default", [recv_timeout: (60000 * 1)]) # allow 1 min for download
+        OvhClient.Swift.download_file(server_object, "default", [recv_timeout: (60000 * 1)]) # allow 1 min for download
     """
     @callback download_file(String.t, String.t) :: {:ok, Response.t} | {:error, Response.t}
 
@@ -739,13 +739,13 @@ defmodule Openstex.Swift.V1.Helpers do
     ## Example
 
     Returns all objects in the `"test_folder/"` but not objects in nested pseudofolders
-        ExHubic.Swift.list_objects("test_folder/", "default", [nested: :false])
+        OvhClient.Swift.list_objects("test_folder/", "default", [nested: :false])
 
     Returns all objects in the `"test_folder/"` and all nested pseudofolders.
-        ExHubic.Swift.list_objects("test_folder/", "default", [nested: :true])
+        OvhClient.Swift.list_objects("test_folder/", "default", [nested: :true])
 
     Returns all objects in the `"default"` container
-        ExHubic.Swift.list_objects("default", [nested: :true])
+        OvhClient.Swift.list_objects("default", [nested: :true])
     """
     @callback list_objects(String.t, String.t, list) :: {:ok, list} | {:error, map}
 
@@ -802,13 +802,13 @@ defmodule Openstex.Swift.V1.Helpers do
     ## Example
 
     Gets all pseudofolders in the `"test_folder/"` pseudofolder one level deep (top level)
-        ExHubic.Swift.list_pseudofolders("test_folder/", "default")
+        OvhClient.Swift.list_pseudofolders("test_folder/", "default")
 
     Gets all pseudofolders in the `"test/"` pseudofolder one level deep (top level)
-        ExHubic.Swift.list_pseudofolders("test", "default")
+        OvhClient.Swift.list_pseudofolders("test", "default")
 
     Gets all the pseudofolders in the container and traverse to the deepest nested pseudofolders
-        ExHubic.Swift.list_pseudofolders(default", [nested: :true])
+        OvhClient.Swift.list_pseudofolders(default", [nested: :true])
     """
     @callback list_pseudofolders(String.t, String.t, list) :: {:ok, list} | {:error, map}
 
