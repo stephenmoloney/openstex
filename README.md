@@ -63,7 +63,7 @@ All of the above Adapters provide access to Swift Object Storage services which 
 
 | Adapter | Getting started |
 |---|---|
-| Ovh Adapter | [openstex_adapters_ovh](https://github.com/stephenmoloney/openstex/blob/master/lib/adapters/ovh/cloudstorage/adapter.ex) |
+| Ovh Adapter | [openstex_adapters_ovh](https://github.com/stephenmoloney/openstex_adapters_ovh) |
 | Hubic Adapter | coming soon |
 | Rackspace Adapter | coming soon |
 
