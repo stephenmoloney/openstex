@@ -63,9 +63,7 @@ defmodule Openstex.Mixfile do
   defp docs() do
     [
     main: "Openstex",
-    extras: [
-             "docs/ovh/cloudstorage/getting_started.md": [path: "mix_task_advanced.md", title: "Getting Started (OVH Cloudstorage)"]
-            ]
+    extras: []
     ]
   end
 
