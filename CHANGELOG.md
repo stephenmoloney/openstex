@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v0.3.1
+
+[neutral changes]
+- Flatten the filestructure in `/lib/openstex/adapter`
+
 ## v0.3.0
 
 [neutral changes]

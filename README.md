@@ -52,7 +52,6 @@ check for objects recursively in deeper folders.
 - [OVH Cloudstorage](https://www.ovh.ie/cloud/storage/)
 - [Rackspace Cloudfiles CDN](https://www.rackspace.com/cloud/cdn-content-delivery-network).
 - [Rackspace Cloudfiles](https://www.rackspace.com/cloud/files)
-- [Hubic](https://hubic.com/en/)
 
 
 All of the above Adapters provide access to Swift Object Storage services which are (mostly) openstack compliant.
@@ -64,8 +63,7 @@ All of the above Adapters provide access to Swift Object Storage services which 
 | Adapter | Getting started |
 |---|---|
 | Ovh Adapter | [openstex_adapters_ovh](https://github.com/stephenmoloney/openstex_adapters_ovh) |
-| Hubic Adapter | coming soon |
-| Rackspace Adapter | coming soon |
+| Rackspace Adapter | [openstex_adapters_rackspace](https://github.com/stephenmoloney/openstex_adapters_rackspace) |
 
 
 ## Tests
