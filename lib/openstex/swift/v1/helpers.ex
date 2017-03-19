@@ -227,7 +227,7 @@ defmodule Openstex.Swift.V1.Helpers do
         """
         @spec list_objects(String.t) :: {:ok, list} | {:error, map} | {:error, String.t}
         def list_objects(container) do
-
+          list_objects("", container, [nested: :true])
         end
 
 
@@ -293,7 +293,7 @@ defmodule Openstex.Swift.V1.Helpers do
                end) do
              {:ok, objects}
           else
-            :false -> {:error, "Unsuccessful request, #{container} does not seem to exist."}
+            :false -> {:error, "Unsuccessful request, container `#{container}` does not seem to exist."}
             {:error, conn} -> {:error, conn}
           end
         end
@@ -316,7 +316,8 @@ defmodule Openstex.Swift.V1.Helpers do
         def list_objects!(folder, container, opts \\ []) do
           case list_objects(folder, container, opts) do
             {:ok, objects} -> objects
-            {:error, conn} -> raise(Openstex.ResponseError, conn: conn)
+            {:error, %HTTPipe.Conn{} = conn} -> raise(Openstex.ResponseError, conn: conn)
+            {:error, msg} -> raise(msg)
           end
         end
 
