@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.2
+
+[non-breaking changes]
+- Add `.travis.yml`
+
 
 ## v0.3.1
 
