@@ -3,7 +3,7 @@
 ## v0.3.2
 
 [non-breaking changes]
-- Add `.travis.yml`
+- Add `.travis.yml` for github tests.
 
 
 ## v0.3.1
