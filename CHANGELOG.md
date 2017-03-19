@@ -4,6 +4,7 @@
 
 [non-breaking changes]
 - Add `.travis.yml` for github tests.
+- remove `test.exs`
 
 
 ## v0.3.1
