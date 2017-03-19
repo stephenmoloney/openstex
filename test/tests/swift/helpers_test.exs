@@ -174,30 +174,50 @@ defmodule Openstex.Swift.V1.HelpersTest do
     Bypass.down(bypass)
   end
 
+  test "list_containers()" do
+    bypass = Bypass.open(port: 3333)
+
+    Bypass.expect(bypass, fn(conn) ->
+      assert "GET" == conn.method
+      body = [%{"bytes" => 0, "count" => 0, "name" => "test_container"}]
+      |> Poison.encode!()
+      Plug.Conn.resp(conn, 200, body)
+    end)
+
+    {:ok, actual_list} = AppClient.Swift.list_containers()
+    expected_list = ["test_container"]
+    assert expected_list == actual_list
+
+    Bypass.down(bypass)
+  end
+
 
   test "list_objects(pseudofolder, container, [nested: :true])" do
     bypass = Bypass.open(port: 3333)
 
     Bypass.expect(bypass, fn(conn) ->
+      query = URI.decode_query(conn.query_string)
       body =
-      case URI.decode_query(conn.query_string) do
-        %{"delimiter" => "/", "format" => "json", "prefix" => ""} ->
+      cond do
+        query == %{"delimiter" => "/", "format" => "json", "prefix" => ""} ->
           [
             %{"subdir" => "nested_folder/"},
             %{
               "name" => "test_object.txt"
             }
           ] |> Poison.encode!()
-        %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
+        query ==  %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
           [
             %{
               "name" => "nested_test_object.txt"
             }
           ] |> Poison.encode!()
-        _ -> []
+        query == %{"format" => "json"} && (:false == Enum.member?(Map.keys(query), "delimiter")) ->
+          [%{"name" => "test_container"}]
+          |> Poison.encode!()
+        :true -> [] |> Poison.encode!()
       end
       assert "GET" == conn.method
-
       Plug.Conn.resp(conn, 200, body)
     end)
 
@@ -213,22 +233,26 @@ defmodule Openstex.Swift.V1.HelpersTest do
     bypass = Bypass.open(port: 3333)
 
     Bypass.expect(bypass, fn(conn) ->
+      query = URI.decode_query(conn.query_string)
       body =
-      case URI.decode_query(conn.query_string) do
-        %{"delimiter" => "/", "format" => "json", "prefix" => ""} ->
+      cond do
+        query == %{"delimiter" => "/", "format" => "json", "prefix" => ""} ->
           [
             %{"subdir" => "nested_folder/"},
             %{
               "name" => "test_object.txt"
             }
           ] |> Poison.encode!()
-        %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
+        query ==  %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
           [
             %{
               "name" => "nested_test_object.txt"
             }
           ] |> Poison.encode!()
-        _ -> []
+        query == %{"format" => "json"} && (:false == Enum.member?(Map.keys(query), "delimiter")) ->
+          [%{"name" => "test_container"}]
+          |> Poison.encode!()
+        :true -> [] |> Poison.encode!()
       end
       assert "GET" == conn.method
 
@@ -302,22 +326,26 @@ defmodule Openstex.Swift.V1.HelpersTest do
         Plug.Conn.resp(conn, 204, "")
       else
         assert "GET" == conn.method
+        query = URI.decode_query(conn.query_string)
         body =
-        case URI.decode_query(conn.query_string) do
-          %{"delimiter" => "/", "format" => "json", "prefix" => ""} ->
+        cond do
+          query == %{"delimiter" => "/", "format" => "json", "prefix" => ""} ->
             [
               %{"subdir" => "nested_folder/"},
               %{
                 "name" => "test_object.txt"
               }
             ] |> Poison.encode!()
-          %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
+          query ==  %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
             [
               %{
                 "name" => "nested_test_object.txt"
               }
             ] |> Poison.encode!()
-          _ -> []
+          query == %{"format" => "json"} && (:false == Enum.member?(Map.keys(query), "delimiter")) ->
+            [%{"name" => "test_container"}]
+            |> Poison.encode!()
+          :true -> [] |> Poison.encode!()
         end
         Plug.Conn.resp(conn, 200, body)
       end

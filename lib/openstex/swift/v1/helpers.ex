@@ -191,15 +191,43 @@ defmodule Openstex.Swift.V1.Helpers do
 
 
         @doc ~s"""
+        Lists all containers.
+        """
+        @spec list_containers() :: {:ok, list} | {:error, map}
+        def list_containers() do
+          case Openstex.Swift.V1.account_info(get_account()) |> client().request() do
+            {:ok, conn} ->
+              list = Enum.map(conn.response.body, fn(container_infos) ->
+                Map.fetch!(container_infos, "name")
+              end)
+              {:ok, list}
+            {:error, conn} -> {:error, conn}
+          end
+        end
+
+
+        @doc ~s"""
+        Lists all containers.
+        """
+        @spec list_containers!() :: list | no_return
+        def list_containers!() do
+          case list_containers() do
+            {:ok, containers} -> containers
+            {:error, conn} -> raise(Openstex.ResponseError, conn: conn)
+          end
+        end
+
+
+        @doc ~s"""
         Lists all objects within a container.
 
         ## Arguments
 
         - `container`: The name of the container.
         """
-        @spec list_objects(String.t) :: {:ok, list} | {:error, map}
+        @spec list_objects(String.t) :: {:ok, list} | {:error, map} | {:error, String.t}
         def list_objects(container) do
-          list_objects("", container, [nested: :true])
+
         end
 
 
@@ -251,19 +279,23 @@ defmodule Openstex.Swift.V1.Helpers do
         Returns all objects in the `"default"` container
           Client.Swift.list_objects("default", [nested: :true])
         """
-        @spec list_objects(String.t, String.t, list) :: {:ok, list} | {:error, map}
+        @spec list_objects(String.t, String.t, list) :: {:ok, list} | {:error, map} | {:error, String.t}
         def list_objects(pseudofolder, container, opts \\ [])
 
         def list_objects(pseudofolder, container, [nested: :true]) do
-          with {:ok, pseudofolders} <- list_pseudofolders(pseudofolder, container, [nested: :true]), do: (
-            pseudofolders = [ pseudofolder  | pseudofolders ]
-            objects = Enum.reduce(pseudofolders, [], fn(pseudofolder, acc) ->
-              with {:ok, objects} <- get_objects_only_in_pseudofolder(pseudofolder, container, get_account()), do: (
-                Enum.concat(objects, acc)
-              )
-            end)
-            {:ok, objects}
-          )
+          with {:ok, list} <- list_containers(),
+               :true <- Enum.member?(list, container),
+               {:ok, pseudofolders} <- list_pseudofolders(pseudofolder, container, [nested: :true]),
+               pseudofolders <- pseudofolders = [ pseudofolder  | pseudofolders ],
+               objects = Enum.reduce(pseudofolders, [], fn(pseudofolder, acc) ->
+                 {:ok, objects} = get_objects_only_in_pseudofolder(pseudofolder, container, get_account())
+                 Enum.concat(objects, acc)
+               end) do
+             {:ok, objects}
+          else
+            :false -> {:error, "Unsuccessful request, #{container} does not seem to exist."}
+            {:error, conn} -> {:error, conn}
+          end
         end
         def list_objects(pseudofolder, container, [nested: :false]) do
           case  get_objects_only_in_pseudofolder(pseudofolder, container, get_account()) do

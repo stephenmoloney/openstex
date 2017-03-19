@@ -3,8 +3,13 @@
 
 ## v0.3.1
 
-[neutral changes]
+[non-breaking changes]
 - Flatten the filestructure in `/lib/openstex/adapter`
+
+[enhancements]
+- Add `list_containers!` and `list_containers` functions to `Swift.Helpers` module.
+- Check for container existence in `list_objects` functions and return error if appropriate.
+
 
 ## v0.3.0
 
