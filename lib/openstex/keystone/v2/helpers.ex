@@ -132,48 +132,72 @@ defmodule Openstex.Keystone.V2.Helpers do
   defmodule Identity.Token.Tenant do
     @moduledoc :false
     defstruct [:description, :enabled, :id, :name]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
   defmodule Identity.Token do
     @moduledoc :false
     defstruct [:audit_ids, :issued_at, :expires, :id, tenant: %Identity.Token.Tenant{}]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
   defmodule Identity.Service do
     @moduledoc :false
     defstruct [endpoints: [], endpoints_links: [], type: "", name: ""]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
   defmodule Identity.Endpoint do
     @moduledoc :false
     defstruct [:admin_url, :region, :internal_url, :id, :public_url]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
   defmodule Identity.User do
     @moduledoc :false
     defstruct [:username, :roles_links, :id, :roles, :name]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
   defmodule Identity.Metadata do
     @moduledoc :false
     defstruct [:metadata, :is_admin, :roles]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
   defmodule Identity.Trust do
     @moduledoc :false
     defstruct [:trust, :id, :trustee_user_id, :trustor_user_id, :impersonation]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
   defmodule Identity do
     @moduledoc :false
     defstruct [
-              token: %Identity.Token{},
-              service_catalog: [],
-              user: %Identity.User{},
-              metadata: %Identity.Metadata{},
-              trust: %Identity.Trust{}
-              ]
-    def build(map), do: Mapail.map_to_struct!(map, __MODULE__, [rest: :merge])
+      token: %Identity.Token{},
+      service_catalog: [],
+      user: %Identity.User{},
+      metadata: %Identity.Metadata{},
+      trust: %Identity.Trust{}
+    ]
+    def build(map) do
+      opts = [rest: :merge, transformations: [:snake_case]]
+      Mapail.map_to_struct!(map, __MODULE__, opts)
+    end
   end
 
 

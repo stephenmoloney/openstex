@@ -4,6 +4,7 @@
 
 [non-breaking changes]
 - remove `test.exs`
+- update `mapail` dependency to `1.0` - `Mapail` api changed.
 
 
 ## v0.3.1

@@ -1,6 +1,6 @@
 defmodule Openstex.Mixfile do
   use Mix.Project
-  @version "0.3.1"
+  @version "0.3.2"
   @elixir "~> 1.4 or ~> 1.5"
 
   def project do
@@ -31,7 +31,7 @@ defmodule Openstex.Mixfile do
     [
       # deps
       {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
-      {:mapail, "~> 0.2"},
+      {:mapail, "~> 1.0"},
       {:httpipe, "~> 0.9"},
 
       # dev deps
