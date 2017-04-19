@@ -1,5 +1,5 @@
 defmodule Openstex.Utils  do
-  @moduledoc "Utility functions"
+  @moduledoc :false
 
 
   @doc :false
@@ -48,8 +48,9 @@ defmodule Openstex.Utils  do
   end
 
 
-  @doc "Generate tempurl Signature for Openstack Swift"
-  @spec gen_tempurl_signature(String.t, integer, String.t, String.t) :: String.t
+#  @doc "Generate tempurl Signature for Openstack Swift"
+#  @spec gen_tempurl_signature(String.t, integer, String.t, String.t) :: String.t
+  @doc :false
   def gen_tempurl_signature(method, expiry, path, temp_key) do
     hmac_body = "#{method}\n#{Integer.to_string(expiry)}\n#{path}"
     :crypto.hmac(:sha, temp_key, hmac_body) |> Base.encode16(case: :lower)

@@ -913,4 +913,31 @@ defmodule Openstex.Swift.V1.Helpers do
     @callback delete_pseudofolder(String.t, String.t) :: :ok | {:error, list}
 
 
+    @doc """
+    Generates a tempurl for an object.
+
+    ## Example
+
+        Client.Swift.generate_temp_url("test_container", "test_file.txt", [])
+
+    ## Arguments
+
+    - `container`: container in which the object is found.
+    - `server_object`: filename under which the file will be stored on the openstack object storage server. defaults to the `client_object_pathname` if none given.
+    - `opts`:
+      - `temp_url_expires_after`: Sets the length of time for which the signature to the public link will remain valid. Adds the `temp_url_expires` query string to the url.
+      The unix epoch time format is used. Defaults to 5 minutes from current time if `temp_url` is :true. Otherwise, it can be set by adding the time in seconds from now for which the link
+      should remain valid. Eg 10 days => (10 * 24 * 60 * 60)
+      - `temp_url_filename`: Defaults to `:false`. Swift automatically generates filenames for temp_urls but this option will allow custom names to be added. Works by adding the `filename` query string to the url.
+      - `temp_url_inline`: Defaults to `:false`. If set to `:true`, the file is not automatically downloaded by the browser and instead the `&inline' query string is added to the url.
+      - `temp_url_method: Defaults to `"GET"` but can be set to `"PUT"`.
+
+
+    ## Notes
+
+    - The client should have a `:account_temp_url_key` option already setup in `config.exs`.
+    """
+    @callback generate_temp_url(String.t, String.t, list) :: String.t
+
+
 end

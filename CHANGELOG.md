@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.4
+
+[changes]
+- Add `generate_temp_url(String.t, String.t, list) ` to the documentation - which was
+missing before from callbacks.
+
+
 ## v0.3.3
 
 [changes]
