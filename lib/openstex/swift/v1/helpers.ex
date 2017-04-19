@@ -730,6 +730,18 @@ defmodule Openstex.Swift.V1.Helpers do
 
 
     @doc ~s"""
+    Lists all containers.
+    """
+    @callback list_containers() :: {:ok, list} | {:error, map}
+
+
+    @doc ~s"""
+    Lists all containers.
+    """
+    @callback list_containers!() :: list| no_return
+
+
+    @doc ~s"""
     Lists objects within a pseudofolder in a container. see `list_objects/3`
 
     ## Arguments

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.3
+
+[changes]
+- Add `list_containers` to the documentation - which was
+missing before from callbacks.
+
+
 ## v0.3.2
 
 [non-breaking changes]
