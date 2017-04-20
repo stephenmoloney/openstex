@@ -1,5 +1,18 @@
 # Changelog
 
+
+## v0.3.5
+
+[changes]
+- More additions to the documentation for `delete_pseudofolder`,
+- Remove the documentation from inside the `__using__` macros and
+enhance the documentation in the `@callbacks` for Swift Helpers.
+
+[bug fix]
+- Fix function `pseudofolder_exists?/2` - previously was only checking for objects
+at level below - needed to check for pseudofolders from one level higher up.
+
+
 ## v0.3.4
 
 [changes]

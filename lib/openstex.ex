@@ -1,6 +1,7 @@
 defmodule Openstex do
   @moduledoc ~S"""
-  Examples setting up clients for use with openstex.
+  Examples setting up clients for use with openstex. See the github
+  `README` for getting started.
 
   ## OVH Cloudstorage Client
 
@@ -42,24 +43,6 @@ defmodule Openstex do
         defmodule Swift do
           @moduledoc :false
           use Openstex.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudfiles.CDN
-        end
-      end
-
-
-  ## Hubic Client
-
-      defmodule Openstex.ExHubic do
-        @moduledoc :false
-        use Openstex.Client, otp_app: :openstex, client: __MODULE__
-
-        defmodule Swift do
-          @moduledoc :false
-          use Openstex.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.ExHubic
-        end
-
-        defmodule Hubic do
-          @moduledoc :false
-          use ExHubic.Client, otp_app: :openstex, client: __MODULE__
         end
       end
   """
