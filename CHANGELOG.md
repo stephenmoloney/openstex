@@ -1,6 +1,15 @@
 # Changelog
 
 
+## v0.3.6
+
+[enchancements]
+- Add new function `delete_container/1`.
+
+[changes]
+-
+
+
 ## v0.3.5
 
 [changes]

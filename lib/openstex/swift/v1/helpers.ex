@@ -87,6 +87,32 @@ defmodule Openstex.Swift.V1.Helpers do
         put_temp_url_key(key, header, key_number)
       end
 
+      def delete_container(container) do
+        with {:ok, containers} <- client().swift().list_containers(),
+          :true <- container in containers,
+           {:ok, pseudofolders} <- client().swift().list_pseudofolders(container),
+           results <- Enum.map(pseudofolders, fn(pseudofolder) ->
+            client().swift().delete_pseudofolder(pseudofolder, container)
+           end),
+           {:ok, :success} <- Enum.all?(results, fn(res) -> res == :ok  end) &&
+                              {:ok, :success} ||
+                              {:error, results},
+           {:ok, objs} <- client().swift().list_objects("", container),
+           _res <- Enum.map(objs, &(client().swift().delete_object(&1, container))),
+           {:ok, _conn} = V1.delete_container(container, client().swift().get_account())
+                          |> client().request() do
+           {:ok, conn}
+        else
+          :false -> :ok
+          {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
+          {:error, results}
+        end
+    end
+
+        request = V1.delete_object(server_object, container, get_account())
+        |> client().request()
+      end
+
       def delete_object(server_object, container) do
         request = V1.delete_object(server_object, container, get_account())
         |> client().request()
@@ -280,7 +306,7 @@ defmodule Openstex.Swift.V1.Helpers do
             fn(resp) ->
               case resp do
                 :ok -> :false
-                :false -> :true
+                _ -> :true
               end
             end,
             fn(resp) ->
@@ -290,7 +316,7 @@ defmodule Openstex.Swift.V1.Helpers do
           if failed_deletes == [] do
             :ok
           else
-            {:error, failed_deletes}
+            {:error, failed_deletes} # failed_deletes = objects which were not deleted
           end
         else
           :ok
