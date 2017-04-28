@@ -1,6 +1,6 @@
 defmodule Openstex.Mixfile do
   use Mix.Project
-  @version "0.3.5"
+  @version "0.3.6"
   @elixir "~> 1.4 or ~> 1.5"
 
   def project do
@@ -22,8 +22,7 @@ defmodule Openstex.Mixfile do
 
   def application() do
     [
-      mod: [],
-      applications: [:crypto, :hackney, :logger, :mapail]
+      applications: [:crypto, :hackney, :logger, :mapail, :poison]
     ]
   end
 

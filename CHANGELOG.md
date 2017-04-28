@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.6
+
+[changes]
+- Add poision to `applications` to avoid warnings on releases.
+- Bump version of `mapail` in `mix.lock`.
 
 ## v0.3.5
 

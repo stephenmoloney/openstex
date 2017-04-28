@@ -9,6 +9,5 @@
 erl_crash.dump
 *.ez
 mix
-mix.lock
 .env
 
