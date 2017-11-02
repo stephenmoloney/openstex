@@ -1,7 +1,7 @@
 defmodule Openstex.Mixfile do
   use Mix.Project
-  @version "0.3.5"
-  @elixir "~> 1.4 or ~> 1.5"
+  @version "0.4.0"
+  @elixir "~> 1.5"
 
   def project do
     [
@@ -36,11 +36,11 @@ defmodule Openstex.Mixfile do
 
       # dev deps
       {:markdown, github: "devinus/markdown", only: [:dev]},
-      {:ex_doc,  "~> 0.14", only: [:dev]},
+      {:ex_doc,  "~> 0.18", only: [:dev]},
 
       # test deps
-      {:bypass, "~> 0.6", only: [:test]},
-      {:httpipe_adapters_hackney, "~> 0.10", only: [:test]},
+      {:bypass, "~> 0.7", only: [:test]},
+      {:httpipe_adapters_hackney, "~> 0.11", only: [:test]},
       {:temp, "~> 0.4", only: [:test]}
     ]
   end

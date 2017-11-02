@@ -1,5 +1,5 @@
 defmodule Openstex.Keystone.V2Test do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
 
   test "get_token(String.t, String.t, String.t)" do

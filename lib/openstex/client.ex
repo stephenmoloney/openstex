@@ -30,8 +30,6 @@ defmodule Openstex.Client do
 
       @doc :false
       def swift(), do: Module.concat(client(), Swift)
-#      def swift(), do: client()
-
 
       @doc "Starts the openstex supervision tree."
       def start_link(sup_opts \\ []) do
