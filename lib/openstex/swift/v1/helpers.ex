@@ -16,13 +16,17 @@ defmodule Openstex.Swift.V1.Helpers do
       def default_hackney_opts(), do: client() |> client().config().hackney_config()
 
       def get_public_url() do
-        client().keystone().identity(client())
+        client()
+        |> client().keystone().identity()
         |> Map.get(:service_catalog)
         |> Enum.find(fn(%Identity.Service{} = service) ->
-          service.name == client().config().swift_service_name() && service.type == client().config().swift_service_type()
+          service.name == client().config().swift_service_name() &&
+          service.type == client().config().swift_service_type()
         end)
         |> Map.get(:endpoints)
-        |> Enum.find(fn(%Identity.Endpoint{} = endpoint) ->  endpoint.region == client().config().swift_region(client) end)
+        |> Enum.find(fn(%Identity.Endpoint{} = endpoint) ->
+          endpoint.region == client().config().swift_region(client())
+        end)
         |> Map.get(:public_url)
       end
 
@@ -98,8 +102,7 @@ defmodule Openstex.Swift.V1.Helpers do
         else
           :false -> :ok
           {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
-          unexpected -> Og.log("unexpected results for delete_container/1: ")
-            Og.log(unexpected)
+          other -> other
         end
         with :true <- Enum.all?(results, fn(res) -> res == :ok  end),
           {:ok, objs} <- client().swift().list_objects("", container),
@@ -110,8 +113,7 @@ defmodule Openstex.Swift.V1.Helpers do
         else
           :false -> {:error, results}
           {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
-          unexpected -> Og.log("unexpected results for delete_container/1: ")
-                        Og.log(unexpected)
+          other -> other
         end
       end
 
