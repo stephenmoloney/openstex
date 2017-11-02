@@ -39,7 +39,7 @@ defmodule Openstex.Mixfile do
       {:ex_doc,  "~> 0.18", only: [:dev]},
 
       # test deps
-      {:bypass, "~> 0.8", only: [:test]},
+      {:bypass, "~> 0.7", only: [:test]},
       {:httpipe_adapters_hackney, "~> 0.11", only: [:test]},
       {:temp, "~> 0.4", only: [:test]}
     ]

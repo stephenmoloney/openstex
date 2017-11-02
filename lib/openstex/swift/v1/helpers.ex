@@ -88,23 +88,30 @@ defmodule Openstex.Swift.V1.Helpers do
       end
 
       def delete_container(container) do
+        results =
         with {:ok, containers} <- client().swift().list_containers(),
           :true <- container in containers,
-            {:ok, pseudofolders} <- client().swift().list_pseudofolders(container),
-            results <- Enum.map(pseudofolders, fn(pseudofolder) ->
+          {:ok, pseudofolders} <- client().swift().list_pseudofolders(container) do
+          Enum.map(pseudofolders, fn(pseudofolder) ->
               client().swift().delete_pseudofolder(pseudofolder, container)
-            end),
-            {:ok, :success} <- Enum.all?(results, fn(res) -> res == :ok  end) &&
-            {:ok, :success} || {:error, results},
-            {:ok, objs} <- client().swift().list_objects("", container),
-            _res <- Enum.map(objs, &(client().swift().delete_object(&1, container))),
-            {:ok, _conn} = V1.delete_container(container, client().swift().get_account())
-            |> client().request() do
-              {:ok, conn}
+          end)
         else
           :false -> :ok
           {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
-          {:error, results}
+          unexpected -> Og.log("unexpected results for delete_container/1: ")
+            Og.log(unexpected)
+        end
+        with :true <- Enum.all?(results, fn(res) -> res == :ok  end),
+          {:ok, objs} <- client().swift().list_objects("", container),
+          _res <- Enum.map(objs, &(client().swift().delete_object(&1, container))),
+          {:ok, conn} = V1.delete_container(container, client().swift().get_account())
+          |> client().request() do
+            {:ok, conn}
+        else
+          :false -> {:error, results}
+          {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
+          unexpected -> Og.log("unexpected results for delete_container/1: ")
+                        Og.log(unexpected)
         end
       end
 
@@ -297,17 +304,17 @@ defmodule Openstex.Swift.V1.Helpers do
               {:error, _conn} -> {:error, obj}
             end
           end)
-          failed_deletes = Enum.filter_map(responses,
+          failed_deletes = Enum.filter(responses,
             fn(resp) ->
               case resp do
                 :ok -> :false
                 _ -> :true
               end
-            end,
-            fn(resp) ->
-              Tuple.to_list(resp) |> List.last()
             end
           )
+          |> Enum.map(fn(resp) ->
+            Tuple.to_list(resp) |> List.last()
+          end)
           if failed_deletes == [] do
             :ok
           else
@@ -347,10 +354,8 @@ defmodule Openstex.Swift.V1.Helpers do
         case client().request(request) do
           {:ok, conn} ->
             objects = conn.response.body
-            |> Enum.filter_map(
-              fn(e) -> Map.has_key?(e, "subdir") == :false end,
-              fn(e) ->  e["name"] end
-            )
+            |> Enum.filter(fn(e) -> Map.has_key?(e, "subdir") == :false end)
+            |> Enum.map(fn(e) ->  e["name"] end)
             {:ok, objects}
           {:error, conn} ->
             {:error, conn}
@@ -363,17 +368,13 @@ defmodule Openstex.Swift.V1.Helpers do
         V1.get_objects_in_folder(obj, container, account)
         |> client().request!()
         |> Map.get(:response) |> Map.get(:body)
-        |> Enum.filter_map(
-          fn(e) -> e["subdir"] != :nil end,
-          fn(e) ->  e["subdir"] end
-        )
+        |> Enum.filter(fn(e) -> e["subdir"] != :nil end)
+        |> Enum.map(fn(e) ->  e["subdir"] end)
       end
 
       defp filter_non_pseudofolders(objects) do
-        Enum.filter_map(objects,
-          fn(e) -> e["subdir"] != :nil end,
-          fn(e) ->  e["subdir"] end
-        )
+        Enum.filter(objects, fn(e) -> e["subdir"] != :nil end)
+        |> Enum.map(fn(e) ->  e["subdir"] end)
       end
 
       defp recurse_pseudofolders(%HTTPipe.Conn{} = conn, container, account) do
@@ -381,10 +382,8 @@ defmodule Openstex.Swift.V1.Helpers do
           {:ok, conn} ->
             folders = filter_non_pseudofolders(conn.response.body)
             pseudofolders = recurse_pseudofolders(folders, container, account)
-            |> Enum.filter_map(
-              fn(e) -> e != "" end,
-              fn(e) -> e end
-            ) # filters out the very top-level root folder "/"
+            |> Enum.filter(fn(e) -> e != "" end) # filters out the very top-level root folder "/"
+            |> Enum.map(fn(e) -> e end)
             {:ok, pseudofolders}
           {:error, conn} ->
             {:error, conn}
