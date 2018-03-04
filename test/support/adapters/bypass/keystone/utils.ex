@@ -109,10 +109,10 @@ defmodule Openstex.Adapters.Bypass.Keystone.Utils do
      %Identity.Service{
         endpoints: [
           %Identity.Endpoint{
-            admin_url: "http://storage.region1.localhost:3001",
+            admin_url: "http://localhost:3001",
             id: "testing_id",
             internal_url: "http://127.0.0.1:8888/v1/AUTH_testing_auth_id",
-            public_url: "http://storage.region1.localhost:3001/v1/AUTH_testing_auth_id",
+            public_url: "http://localhost:3001/v1/AUTH_testing_auth_id",
             region: "Bypass-Region-1"
             }
           ],

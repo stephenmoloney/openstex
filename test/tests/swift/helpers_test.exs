@@ -18,7 +18,7 @@ defmodule Openstex.Swift.V1.HelpersTest do
   end
 
   test "get_public_url()" do
-    expected = "http://storage.region1.localhost:3001/v1/AUTH_testing_auth_id"
+    expected = "http://localhost:3001/v1/AUTH_testing_auth_id"
     actual = Swift.get_public_url()
     assert expected == actual
   end
@@ -117,7 +117,7 @@ defmodule Openstex.Swift.V1.HelpersTest do
       |> File.read!()
       |> :erlang.md5()
       |> Base.encode16(case: :lower)
-    expected_url = "http://storage.region1.localhost:3001/v1/AUTH_testing_auth_id/test_container/test_object?format=json"
+    expected_url = "http://localhost:3001/v1/AUTH_testing_auth_id/test_container/test_object?format=json"
 
     Bypass.expect(bypass, fn(conn) ->
       assert "PUT" == conn.method
@@ -140,7 +140,7 @@ defmodule Openstex.Swift.V1.HelpersTest do
     expected_binary = "swift test!"
     expected_bytes = Integer.to_string(:erlang.byte_size(expected_binary))
     expected_etag = expected_binary |> :erlang.md5() |> Base.encode16(case: :lower)
-    expected_url = "http://storage.region1.localhost:3001/v1/AUTH_testing_auth_id/test_container/test_object"
+    expected_url = "http://localhost:3001/v1/AUTH_testing_auth_id/test_container/test_object"
 
     Bypass.expect(bypass, fn(conn) ->
       assert "GET" == conn.method
@@ -167,13 +167,14 @@ defmodule Openstex.Swift.V1.HelpersTest do
     end)
 
     {:ok, conn} = Swift.delete_object("test_object", "test_container")
-    expected_url = "http://storage.region1.localhost:3001/v1/AUTH_testing_auth_id/test_container/test_object"
+    expected_url = "http://localhost:3001/v1/AUTH_testing_auth_id/test_container/test_object"
     actual_url = conn.request.url
     assert expected_url == actual_url
 
     Bypass.down(bypass)
   end
 
+  @tag :wip
   test "list_containers()" do
     bypass = Bypass.open(port: @bypass_port)
 

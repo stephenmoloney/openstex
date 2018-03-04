@@ -27,5 +27,5 @@ script:
       mix format mix.exs lib/**/*.{ex,exs} --check-formatted && \
       mix format mix.exs test/**/*.{ex,exs} --check-formatted
     fi;
-  - mix credo --strict
+  - mix credo --strict --ignore cyclomaticcomplexity,longquoteblocks,maxlinelength
   - mix test
