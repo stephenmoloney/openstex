@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.1
+
+[changes]
+- updated deps
+- added travis.yml
+- swapped encoder from Poison -> Jason
 
 ## v0.3.6
 

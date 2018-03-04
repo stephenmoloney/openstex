@@ -6,7 +6,7 @@ defmodule Openstex.Keystone.V2Test do
     expected = %HTTPipe.Conn{
       adapter_options: [timeout: 10000, recv_timeout: 30000],
       request: %HTTPipe.Request{
-        body: "{\"auth\":{\"passwordCredentials\":{\"username\":\"test_username\",\"password\":\"test_password\"}}}",
+        body: "{\"auth\":{\"passwordCredentials\":{\"password\":\"test_password\",\"username\":\"test_username\"}}}",
         headers: %{"Content-Type" => "application/json; charset=utf-8"},
         http_version: "1.1",
         method: :post,
@@ -27,7 +27,7 @@ defmodule Openstex.Keystone.V2Test do
     expected = %HTTPipe.Conn{
       adapter_options: [timeout: 10000, recv_timeout: 30000],
       request: %HTTPipe.Request{
-        body: "{\"auth\":{\"token\":{\"id\":\"test_token\"},\"tenantId\":\"test_tenant\"}}",
+        body: "{\"auth\":{\"tenantId\":\"test_tenant\",\"token\":{\"id\":\"test_token\"}}}",
         headers: %{"Content-Type" => "application/json; charset=utf-8"},
         http_version: "1.1",
         method: :post,

@@ -180,7 +180,7 @@ defmodule Openstex.Swift.V1.HelpersTest do
     Bypass.expect(bypass, fn(conn) ->
       assert "GET" == conn.method
       body = [%{"bytes" => 0, "count" => 0, "name" => "test_container"}]
-      |> Poison.encode!()
+      |> Jason.encode!()
       Plug.Conn.resp(conn, 200, body)
     end)
 
@@ -205,17 +205,17 @@ defmodule Openstex.Swift.V1.HelpersTest do
             %{
               "name" => "test_object.txt"
             }
-          ] |> Poison.encode!()
+          ] |> Jason.encode!()
         query ==  %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
           [
             %{
               "name" => "nested_test_object.txt"
             }
-          ] |> Poison.encode!()
+          ] |> Jason.encode!()
         query == %{"format" => "json"} && (:false == Enum.member?(Map.keys(query), "delimiter")) ->
           [%{"name" => "test_container"}]
-          |> Poison.encode!()
-        :true -> [] |> Poison.encode!()
+          |> Jason.encode!()
+        :true -> [] |> Jason.encode!()
       end
       assert "GET" == conn.method
       Plug.Conn.resp(conn, 200, body)
@@ -242,17 +242,17 @@ defmodule Openstex.Swift.V1.HelpersTest do
             %{
               "name" => "test_object.txt"
             }
-          ] |> Poison.encode!()
+          ] |> Jason.encode!()
         query ==  %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
           [
             %{
               "name" => "nested_test_object.txt"
             }
-          ] |> Poison.encode!()
+          ] |> Jason.encode!()
         query == %{"format" => "json"} && (:false == Enum.member?(Map.keys(query), "delimiter")) ->
           [%{"name" => "test_container"}]
-          |> Poison.encode!()
-        :true -> [] |> Poison.encode!()
+          |> Jason.encode!()
+        :true -> [] |> Jason.encode!()
       end
       assert "GET" == conn.method
 
@@ -277,7 +277,7 @@ defmodule Openstex.Swift.V1.HelpersTest do
         %{
           "name" => "test_object.txt"
         }
-      ] |> Poison.encode!()
+      ] |> Jason.encode!()
       assert "GET" == conn.method
       Plug.Conn.resp(conn, 200, body)
     end)
@@ -300,7 +300,7 @@ defmodule Openstex.Swift.V1.HelpersTest do
         %{
           "name" => "test_object.txt"
         }
-      ] |> Poison.encode!()
+      ] |> Jason.encode!()
       assert "GET" == conn.method
       Plug.Conn.resp(conn, 200, body)
     end)
@@ -335,17 +335,17 @@ defmodule Openstex.Swift.V1.HelpersTest do
 #              %{
 #                "name" => "test_object.txt"
 #              }
-#            ] |> Poison.encode!()
+#            ] |> Jason.encode!()
 #          query ==  %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
 #            [
 #              %{
 #                "name" => "nested_test_object.txt"
 #              }
-#            ] |> Poison.encode!()
+#            ] |> Jason.encode!()
 #          query == %{"format" => "json"} && (:false == Enum.member?(Map.keys(query), "delimiter")) ->
 #            [%{"name" => "test_container"}]
-#            |> Poison.encode!()
-#          :true -> [] |> Poison.encode!()
+#            |> Jason.encode!()
+#          :true -> [] |> Jason.encode!()
 #        end
 #        Plug.Conn.resp(conn, 200, body)
 #      end
@@ -371,9 +371,9 @@ defmodule Openstex.Swift.V1.HelpersTest do
 #              %{
 #                "name" => "test_object.txt"
 #              }
-#            ] |> Poison.encode!()
+#            ] |> Jason.encode!()
 #          %{"delimiter" => "/", "format" => "json", "prefix" => "nested_folder/"} ->
-#            [] |> Poison.encode!()
+#            [] |> Jason.encode!()
 #          _ -> []
 #        end
 #        Plug.Conn.resp(conn, 200, body)

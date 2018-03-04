@@ -31,7 +31,7 @@ defmodule Openstex.Request do
 
   defp parse_body(resp) do
     try do
-       resp.body |> Poison.decode!()
+       resp.body |> Jason.decode!()
     rescue
       _ ->
         resp.body

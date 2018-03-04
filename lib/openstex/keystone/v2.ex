@@ -34,7 +34,7 @@ defmodule Openstex.Keystone.V2 do
                                           }
               }
     }
-    |> Poison.encode!()
+    |> Jason.encode!()
     req = %HTTPipe.Request{
       method: :post,
       url: endpoint <> "/tokens",
@@ -66,7 +66,7 @@ defmodule Openstex.Keystone.V2 do
               %{
                 "token" => %{"id" => token}
               }
-    } |> Poison.encode!()
+    } |> Jason.encode!()
     req = %HTTPipe.Request{
       method: :post,
       url: endpoint <> "/tokens",
@@ -88,7 +88,7 @@ defmodule Openstex.Keystone.V2 do
                     "tenantId" => tenant_id,
                     "token" => %{"id" => token}
                   }
-        } |> Poison.encode!()
+        } |> Jason.encode!()
       _ ->
         %{
           "auth" =>
@@ -96,7 +96,7 @@ defmodule Openstex.Keystone.V2 do
                     "tenantName" => tenant_name,
                     "token" => %{"id" => token}
                   }
-        } |> Poison.encode!()
+        } |> Jason.encode!()
     end
 
     req = %HTTPipe.Request{
