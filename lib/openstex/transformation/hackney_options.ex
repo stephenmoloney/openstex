@@ -1,19 +1,19 @@
 defmodule Openstex.Transformation.HackneyOptions do
-  @moduledoc :false
-
+  @moduledoc false
 
   # Public
 
-  @spec apply(HTTPipe.Conn.t, atom) :: HTTPipe.Conn.t
+  @spec apply(HTTPipe.Conn.t(), atom) :: HTTPipe.Conn.t()
   def apply(%HTTPipe.Conn{request: %HTTPipe.Request{}} = conn, client) do
     trans = Map.get(conn, :completed_transformations, [])
     default_hackney_opts = client.config().hackney_config(client)
     hackney_options = Map.get(conn, :adapter_options, [])
     options = merge_options(default_hackney_opts, hackney_options)
-    Map.put(conn, :adapter_options, options)
+
+    conn
+    |> Map.put(:adapter_options, options)
     |> Map.put(:completed_transformations, trans ++ [:hackney_options])
   end
-
 
   # Private
 
@@ -23,5 +23,4 @@ defmodule Openstex.Transformation.HackneyOptions do
     opts = Map.merge(opts1, opts2)
     Enum.into(opts, [])
   end
-
 end

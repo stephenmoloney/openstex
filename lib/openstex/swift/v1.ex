@@ -12,10 +12,11 @@ defmodule Openstex.Swift.V1 do
       account = client.swift().get_account()
       Openstex.Swift.V1.account_info(account) |> ExOvh.request()
   """
+  alias HTTPipe.Conn
+  alias Openstex.Utils
   alias Openstex.Transformation.{Body, Url}
 
   # CONTAINER RELATED REQUESTS
-
 
   @doc ~S"""
   Get account details and containers for given account.
@@ -32,16 +33,17 @@ defmodule Openstex.Swift.V1 do
       account = client.swift().get_account()
       Openstex.Swift.V1.account_info(account) |> client.request()
   """
-  @spec account_info(String.t) :: HTTPipe.Conn.t
+  @spec account_info(String.t()) :: Conn.t()
   def account_info(account) do
-    req = %HTTPipe.Request{
-      method: :get,
-      url: account
-    }
-    |> Url.add_query_string(%{"format" => "json"})
-    Map.put(HTTPipe.Conn.new(), :request, req)
-  end
+    req =
+      %HTTPipe.Request{
+        method: :get,
+        url: account
+      }
+      |> Url.add_query_string(%{"format" => "json"})
 
+    Map.put(Conn.new(), :request, req)
+  end
 
   @doc ~S"""
   Create a new container.
@@ -49,7 +51,6 @@ defmodule Openstex.Swift.V1 do
   ## Api
 
       PUT /v1/​{account}/{container}​
-
 
   ## Arguments
 
@@ -85,28 +86,36 @@ defmodule Openstex.Swift.V1 do
       account = client.swift().get_account()
       Openstex.Swift.V1.create_container("new_container", account) |> client.request()
   """
-  @spec create_container(String.t, String.t, Keyword.t) :: HTTPipe.Conn.t
+  @spec create_container(String.t(), String.t(), Keyword.t()) :: Conn.t()
   def create_container(container, account, opts \\ []) do
-    read_acl = Keyword.get(opts, :read_acl, :nil)
-    write_acl = Keyword.get(opts, :write_acl, :nil)
-    headers = Keyword.get(opts, :headers, []) |> Enum.into(%{})
-    additional_headers =
-    cond do
-      read_acl == :nil && write_acl == :nil -> %{}
-      read_acl != :nil && write_acl == :nil -> %{"X-Container-Read" => read_acl}
-      read_acl == :nil && write_acl != :nil -> %{"X-Container-Write" => write_acl}
-      :true -> %{"X-Container-Read" => read_acl, "X-Container-Write" => write_acl}
-    end
-    headers = Map.merge(headers, additional_headers)
-    req = %HTTPipe.Request{
-      method: :put,
-      url: account <> "/" <> container,
-      headers: headers
-    }
-    |> Url.add_query_string(%{"format" => "json"})
-    Map.put(HTTPipe.Conn.new(), :request, req)
-  end
+    read_acl = Keyword.get(opts, :read_acl, nil)
+    write_acl = Keyword.get(opts, :write_acl, nil)
 
+    headers =
+      opts
+      |> Keyword.get(:headers, [])
+      |> Enum.into(%{})
+
+    additional_headers =
+      cond do
+        read_acl == nil && write_acl == nil -> %{}
+        read_acl != nil && write_acl == nil -> %{"X-Container-Read" => read_acl}
+        read_acl == nil && write_acl != nil -> %{"X-Container-Write" => write_acl}
+        true -> %{"X-Container-Read" => read_acl, "X-Container-Write" => write_acl}
+      end
+
+    headers = Map.merge(headers, additional_headers)
+
+    req =
+      %HTTPipe.Request{
+        method: :put,
+        url: account <> "/" <> container,
+        headers: headers
+      }
+      |> Url.add_query_string(%{"format" => "json"})
+
+    Map.put(Conn.new(), :request, req)
+  end
 
   @doc ~S"""
   Modify a container. See docs for possible changes to [container metadata](http://developer.openstack.org/api-ref-objectstorage-v1.html)
@@ -151,10 +160,11 @@ defmodule Openstex.Swift.V1 do
       headers = []
       Openstex.Swift.V1.modify_container("new_container", account, headers) |> client.request()
   """
-  @spec modify_container(String.t, String.t, Keyword.t) :: HTTPipe.Conn.t
+  @spec modify_container(String.t(), String.t(), Keyword.t()) :: Conn.t()
   def modify_container(container, account, opts \\ []) do
-    create_container(container, account, opts)
-    |> HTTPipe.Conn.put_req_method(:post)
+    container
+    |> create_container(account, opts)
+    |> Conn.put_req_method(:post)
   end
 
   @doc ~S"""
@@ -172,16 +182,17 @@ defmodule Openstex.Swift.V1 do
       account = client.swift().get_account()
       Openstex.Swift.V1.delete_container("new_container", account) |> client.request(query)
   """
-  @spec delete_container(String.t, String.t) :: HTTPipe.Conn.t
+  @spec delete_container(String.t(), String.t()) :: Conn.t()
   def delete_container(container, account) do
-    req = %HTTPipe.Request{
-      method: :delete,
-      url:  account <> "/" <> container
-    }
-    |> Url.add_query_string(%{"format" => "json"})
-    Map.put(HTTPipe.Conn.new(), :request, req)
-  end
+    req =
+      %HTTPipe.Request{
+        method: :delete,
+        url: account <> "/" <> container
+      }
+      |> Url.add_query_string(%{"format" => "json"})
 
+    Map.put(Conn.new(), :request, req)
+  end
 
   @doc ~S"""
   Get information about the container
@@ -198,19 +209,19 @@ defmodule Openstex.Swift.V1 do
       account = client.swift().get_account()
       query = Openstex.Swift.V1.container_info("new_container", account) |> client.request()
   """
-  @spec container_info(String.t, String.t) :: HTTPipe.Conn.t
+  @spec container_info(String.t(), String.t()) :: Conn.t()
   def container_info(container, account) do
-    req = %HTTPipe.Request{
-      method: :head,
-      url: account <> "/" <> container
-    }
-    |> Url.add_query_string(%{"format" => "json"})
-    Map.put(HTTPipe.Conn.new(), :request, req)
+    req =
+      %HTTPipe.Request{
+        method: :head,
+        url: account <> "/" <> container
+      }
+      |> Url.add_query_string(%{"format" => "json"})
+
+    Map.put(Conn.new(), :request, req)
   end
 
-
   # OBJECT RELATED REQUESTS
-
 
   @doc ~S"""
   List objects in a container
@@ -227,17 +238,17 @@ defmodule Openstex.Swift.V1 do
       account = client.swift().get_account()
       Openstex.Swift.V1.get_objects("new_container", account) |> client.request()
   """
-  @spec get_objects(String.t, String.t) :: HTTPipe.Conn.t
+  @spec get_objects(String.t(), String.t()) :: Conn.t()
   def get_objects(container, account) do
-    req = %HTTPipe.Request{
-      method: :get,
-      url: account <> "/" <> container
-    }
-    |> Url.add_query_string(%{"format" => "json"})
-    Map.put(HTTPipe.Conn.new(), :request, req)
+    req =
+      %HTTPipe.Request{
+        method: :get,
+        url: account <> "/" <> container
+      }
+      |> Url.add_query_string(%{"format" => "json"})
+
+    Map.put(Conn.new(), :request, req)
   end
-
-
 
   @doc ~S"""
   Get/Download a specific object (file)
@@ -265,18 +276,23 @@ defmodule Openstex.Swift.V1 do
       - `headers`: Additional headers metadata in the request. Eg `[headers: [{"If-None-Match", "<local_file_md5>"}]`,
       this example would return `304` if the local file md5 was the same as the object etag on the server.
   """
-  @spec get_object(String.t, String.t, String.t, Keyword.t) :: HTTPipe.Conn.t
+  @spec get_object(String.t(), String.t(), String.t(), Keyword.t()) :: Conn.t()
   def get_object(server_object, container, account, opts \\ []) do
-    headers = Keyword.get(opts, :headers, []) |> Enum.into(%{})
-    server_object = Openstex.Utils.remove_if_has_trailing_slash(server_object)
+    headers =
+      opts
+      |> Keyword.get(:headers, [])
+      |> Enum.into(%{})
+
+    server_object = Utils.remove_if_has_trailing_slash(server_object)
+
     req = %HTTPipe.Request{
       method: :get,
       url: account <> "/" <> container <> "/" <> server_object,
       headers: headers
     }
-    Map.put(HTTPipe.Conn.new(), :request, req)
-  end
 
+    Map.put(Conn.new(), :request, req)
+  end
 
   @doc """
   Create or replace an object (file).
@@ -323,53 +339,89 @@ defmodule Openstex.Swift.V1 do
   Large objects are categorized as those over 5GB in size.
   There are two ways of uploading large files - dynamic uploads and static uploads. See [here](http://docs.openstack.org/developer/swift/overview_large_objects.html#direct-api) for more information.
   """
-  @spec create_object(String.t, String.t, String.t, list) :: HTTPipe.Conn.t | File.posix
+  @spec create_object(String.t(), String.t(), String.t(), list) :: Conn.t() | File.posix()
   def create_object(container, account, client_object_pathname, opts \\ []) do
     server_object = Keyword.get(opts, :server_object, Path.basename(client_object_pathname))
 
     # headers
-    x_object_manifest = Keyword.get(opts, :x_object_manifest, :false)
-    x_object_manifest = if x_object_manifest != :false, do: URI.encode(x_object_manifest), else: x_object_manifest
-    chunked_transfer = Keyword.get(opts, :chunked_transfer, :false)
-    content_type = Keyword.get(opts, :content_type, :false)
-    x_detect_content_type = Keyword.get(opts, :x_detect_content_type, :false)
-    content_disposition = Keyword.get(opts, :content_disposition, :false)
-    delete_after = Keyword.get(opts, :delete_after, :false)
-    e_tag = Keyword.get(opts, :e_tag, :true)
+    x_object_manifest = Keyword.get(opts, :x_object_manifest, false)
+
+    x_object_manifest =
+      if x_object_manifest != false, do: URI.encode(x_object_manifest), else: x_object_manifest
+
+    chunked_transfer = Keyword.get(opts, :chunked_transfer, false)
+    content_type = Keyword.get(opts, :content_type, false)
+    x_detect_content_type = Keyword.get(opts, :x_detect_content_type, false)
+    content_disposition = Keyword.get(opts, :content_disposition, false)
+    delete_after = Keyword.get(opts, :delete_after, false)
+    e_tag = Keyword.get(opts, :e_tag, true)
 
     # query_string
-    multipart_manifest = Keyword.get(opts, :multipart_manifest, :false)
+    multipart_manifest = Keyword.get(opts, :multipart_manifest, false)
 
     case File.read(client_object_pathname) do
       {:ok, binary_object} ->
         path = account <> "/" <> container <> "/" <> server_object
+
         multipart_querystring =
-        case multipart_manifest do
-          :true -> %{"multipart-manifest" => "put"}
-          :false -> %{}
-        end
-        headers = if x_object_manifest != :false, do: [{"X-Object-Manifest", x_object_manifest}], else: []
-        headers = if chunked_transfer != :false, do: headers ++ [{"Transfer-Encoding", "chunked"}], else: headers
-        headers = if content_type != :false, do: headers ++ [{"Content-Type", content_type}], else: headers
-        headers = if x_detect_content_type != :false, do: headers ++ [{"X-Detect-Content-Type", "true"}], else: headers
-        headers = if e_tag != :false, do: headers ++ [{"ETag", Base.encode16(:erlang.md5(binary_object), case: :lower)}], else: headers
-        headers = if content_disposition != :false, do: headers ++ [{"Content-Disposition", content_disposition}], else: headers
-        headers = if delete_after != :false, do: headers ++ [{"X-Delete-After", delete_after}], else: headers
+          case multipart_manifest do
+            true -> %{"multipart-manifest" => "put"}
+            false -> %{}
+          end
+
+        headers =
+          if x_object_manifest != false, do: [{"X-Object-Manifest", x_object_manifest}], else: []
+
+        headers =
+          if chunked_transfer != false,
+            do: headers ++ [{"Transfer-Encoding", "chunked"}],
+            else: headers
+
+        headers =
+          if content_type != false, do: headers ++ [{"Content-Type", content_type}], else: headers
+
+        headers =
+          if x_detect_content_type != false,
+            do: headers ++ [{"X-Detect-Content-Type", "true"}],
+            else: headers
+
+        headers =
+          if e_tag != false,
+            do: headers ++ [{"ETag", Base.encode16(:erlang.md5(binary_object), case: :lower)}],
+            else: headers
+
+        headers =
+          if content_disposition != false,
+            do: headers ++ [{"Content-Disposition", content_disposition}],
+            else: headers
+
+        headers =
+          if delete_after != false,
+            do: headers ++ [{"X-Delete-After", delete_after}],
+            else: headers
+
         req = %HTTPipe.Request{
           method: :put,
           url: path,
-          headers: Enum.map(headers, fn({k, v}) -> {String.downcase(k), v} end) |> Enum.into(%{})
+          headers:
+            headers
+            |> Enum.map(fn {k, v} -> {String.downcase(k), v} end)
+            |> Enum.into(%{})
         }
-        req = req
-        |> Url.add_query_string(%{"format" => "json"})
-        |> Url.add_query_string(multipart_querystring)
-        Map.put(HTTPipe.Conn.new(), :request, req)
+
+        req =
+          req
+          |> Url.add_query_string(%{"format" => "json"})
+          |> Url.add_query_string(multipart_querystring)
+
+        Conn.new()
+        |> Map.put(:request, req)
         |> Body.apply(binary_object)
+
       {:error, posix_error} ->
         posix_error
     end
   end
-
 
   @doc """
   Delete an Object (Delete a file)
@@ -388,19 +440,19 @@ defmodule Openstex.Swift.V1 do
       server_object = "server_file.txt"
       Openstex.Swift.V1.delete_object(server_object, container, account, server_object) |> client.request(query)
   """
-  @spec delete_object(String.t, String.t, String.t) :: HTTPipe.Conn.t
+  @spec delete_object(String.t(), String.t(), String.t()) :: Conn.t()
   def delete_object(server_object, container, account) do
-    server_object = Openstex.Utils.remove_if_has_trailing_slash(server_object)
+    server_object = Utils.remove_if_has_trailing_slash(server_object)
+
     req = %HTTPipe.Request{
       method: :delete,
-      url:  account <> "/" <> container <> "/" <> server_object
+      url: account <> "/" <> container <> "/" <> server_object
     }
-    Map.put(HTTPipe.Conn.new(), :request, req)
+
+    Map.put(Conn.new(), :request, req)
   end
 
-
   # PSEUDOFOLDER RELATED REQUESTS
-
 
   @doc """
   List all objects and psuedofolders in a psuedofolder for a given container.
@@ -424,13 +476,16 @@ defmodule Openstex.Swift.V1 do
       account = client.swift().get_account()
       Openstex.Swift.V1.get_objects_in_folder("test_folder/", "default", account) |> client.request(query)
   """
-  @spec get_objects_in_folder(String.t, String.t, String.t) :: HTTPipe.Conn.t
+  @spec get_objects_in_folder(String.t(), String.t(), String.t()) :: Conn.t()
   def get_objects_in_folder(pseudofolder \\ "", container, account) do
     conn = get_objects(container, account)
     request = Map.fetch!(conn, :request)
-    request = Openstex.Transformation.Url.add_query_string(request, %{"delimiter" => "/"})
-    |> Openstex.Transformation.Url.add_query_string(%{"prefix" => pseudofolder})
+
+    request =
+      request
+      |> Url.add_query_string(%{"delimiter" => "/"})
+      |> Url.add_query_string(%{"prefix" => pseudofolder})
+
     Map.put(conn, :request, request)
   end
-
 end

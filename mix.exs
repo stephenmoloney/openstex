@@ -1,51 +1,53 @@
 defmodule Openstex.Mixfile do
   use Mix.Project
-  @version "0.4.0"
-  @elixir "~> 1.5"
+  @version "0.4.1"
+  @elixir_versions ">= 1.4.0"
+  @hackney_versions ">= 1.6.0"
 
   def project do
     [
       app: :openstex,
       name: "Openstex",
       version: @version,
-      elixir: @elixir,
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
-      elixirc_paths: elixirc_paths(Mix.env),
+      elixir: @elixir_versions,
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
       source_url: "https://github.com/stephenmoloney/openstex",
       description: description(),
       package: package(),
+      aliases: aliases(),
       deps: deps(),
       docs: docs()
-   ]
-  end
-
-  def application() do
-    [
-      mod: [],
-      applications: [:crypto, :hackney, :logger, :mapail]
     ]
   end
 
-  defp deps() do
+  def application do
+    [
+      mod: [],
+      extra_applications: [:crypto, :logger]
+    ]
+  end
+
+  defp deps do
     [
       # deps
-      {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
+      {:jason, "~> 1.0"},
       {:mapail, "~> 1.0"},
       {:httpipe, "~> 0.9"},
+      {:hackney, @hackney_versions, override: true},
 
-      # dev deps
-      {:markdown, github: "devinus/markdown", only: [:dev]},
-      {:ex_doc,  "~> 0.18", only: [:dev]},
-
-      # test deps
-      {:bypass, "~> 0.7", only: [:test]},
+      # dev/test deps
+      {:markdown, github: "devinus/markdown", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.18", only: [:dev], runtime: false},
+      {:credo, "~> 0.9.0-rc8", only: [:dev, :test], runtime: false},
+      {:bypass, "~> 0.8", only: [:test]},
       {:httpipe_adapters_hackney, "~> 0.11", only: [:test]},
       {:temp, "~> 0.4", only: [:test]}
     ]
   end
 
-  defp description() do
+  defp description do
     ~s"""
     A client in elixir for making requests to openstack compliant apis.
     """
@@ -55,19 +57,45 @@ defmodule Openstex.Mixfile do
     %{
       licenses: ["MIT"],
       maintainers: ["Stephen Moloney"],
-      links: %{ "GitHub" => "https://github.com/stephenmoloney/openstex"},
+      links: %{"GitHub" => "https://github.com/stephenmoloney/openstex"},
       files: ~w(lib mix.exs CHANGELOG* README* LICENCE*)
-     }
+    }
   end
 
-  defp docs() do
+  defp docs do
     [
-    main: "Openstex",
-    extras: []
+      main: "Openstex",
+      extras: []
     ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
+  defp aliases do
+    [
+      format: [
+        "format #{format_args(:lib)}",
+        "format #{format_args(:test)}"
+      ],
+      prep: [
+        "clean",
+        "format",
+        "compile",
+        "credo #{credo_args()}"
+      ]
+    ]
+  end
+
+  defp credo_args do
+    "--strict --ignore cyclomaticcomplexity,longquoteblocks,maxlinelength"
+  end
+
+  defp format_args(:lib) do
+    "mix.exs lib/**/*.{ex,exs}"
+  end
+
+  defp format_args(:test) do
+    "mix.exs test/**/*.{ex,exs} test/**/**/*.{ex,exs}"
+  end
 end

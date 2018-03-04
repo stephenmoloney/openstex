@@ -1,4 +1,4 @@
-# Openstex  [![Build Status](https://travis-ci.org/stephenmoloney/openstex_test.svg)](https://travis-ci.org/stephenmoloney/openstex_test) [![Hex Version](http://img.shields.io/hexpm/v/openstex.svg?style=flat)](https://hex.pm/packages/openstex) [![Hex docs](http://img.shields.io/badge/hex.pm-docs-green.svg?style=flat)](https://hexdocs.pm/openstex)
+# Openstex [![Hex Version](http://img.shields.io/hexpm/v/openstex.svg?style=flat-square)](https://hex.pm/packages/openstex) [![Hex docs](http://img.shields.io/badge/hex.pm-docs-green.svg?style=flat-square)](https://hexdocs.pm/openstex) [![License](https://img.shields.io/hexpm/l/openstex.svg?style=flat-square)](https://github.com/stephenmoloney/openstex/blob/master/LICENSE.md) [![Build Status](https://travis-ci.org/stephenmoloney/openstex.svg)](https://travis-ci.org/stephenmoloney/openstex) 
 
 An elixir client for making requests to [Openstack compliant apis](http://developer.openstack.org/api-ref.html).
 
@@ -19,9 +19,9 @@ to the API using a `request` function.
 - Example - creating a new container
 
 ```elixir
-  account = Client.Swift.get_account()
-  conn = Openstex.Swift.V1.create_container("new_container", account)
-  client.request(conn)
+account = Client.Swift.get_account()
+conn = Openstex.Swift.V1.create_container("new_container", account)
+client.request(conn)
 ```
 
 
@@ -32,8 +32,8 @@ a. One liners for sending queries to the client API.
 - Example - Uploading a file
 
 ```elixir
-  file_path = Path.join(Path.expand(__DIR__, "priv/test.json")
-  Client.Swift.upload_file(file_path, server_object, container,
+file_path = Path.join(Path.expand(__DIR__, "priv/test.json")
+Client.Swift.upload_file(file_path, server_object, container,
 ```
 
 b. Sending more complex queries such as multi-step queries to the client API.
@@ -42,8 +42,8 @@ b. Sending more complex queries such as multi-step queries to the client API.
 check for objects recursively in deeper folders.
 
 ```elixir
-  file_path = Path.join(Path.expand(__DIR__, "priv/test.json")
-  Client.Swift.list_objects("nested_folder", "new_container", [nested: :true])
+file_path = Path.join(Path.expand(__DIR__, "priv/test.json")
+Client.Swift.list_objects("nested_folder", "new_container", [nested: :true])
 ```
 
 

@@ -1,8 +1,8 @@
 defmodule Openstex.ResponseError do
-  @moduledoc :false
+  @moduledoc false
   defexception [:conn]
 
-  def exception([conn: %HTTPipe.Conn{} = conn]) do
+  def exception(conn: %HTTPipe.Conn{} = conn) do
     %__MODULE__{conn: conn}
   end
 
@@ -11,13 +11,7 @@ defmodule Openstex.ResponseError do
     The following http connection execution was unsuccessful, unexpected or erroneous in some way:
 
     Request Details:
-    """
-    <>
-    request_output(conn)
-    <>
-    "\nResponse Details:\n"
-    <>
-    response_output(conn)
+    """ <> request_output(conn) <> "\nResponse Details:\n" <> response_output(conn)
   end
 
   def request_output(conn) do
@@ -26,7 +20,7 @@ defmodule Openstex.ResponseError do
         #{Kernel.inspect(conn.request.method)}
 
     ** Request Body **
-        #{Kernel.inspect conn.request.body}
+        #{Kernel.inspect(conn.request.body)}
 
     ** Request Headers **
         #{Kernel.inspect(conn.request.headers)}
@@ -39,7 +33,7 @@ defmodule Openstex.ResponseError do
   def response_output(conn) do
     ~s"""
     ** Reponse Status Code **
-        #{Kernel.inspect conn.response.status_code}
+        #{Kernel.inspect(conn.response.status_code)}
 
     ** Response Body **
         #{Kernel.inspect(conn.response.body)}

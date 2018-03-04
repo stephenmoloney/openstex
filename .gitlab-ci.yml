@@ -1,0 +1,17 @@
+image: elixir:1.6.1
+
+variables:
+  MIX_ENV: test
+
+stages:
+  - test
+
+test:
+  stage: test
+  script:
+    - mix do local.hex --force, local.rebar --force, hex.info
+    - mix do deps.get, deps.compile, compile
+    - mix format mix.exs lib/**/*.{ex,exs} --check-formatted
+    - mix format mix.exs test/**/*.{ex,exs} --check-formatted
+    - mix credo --strict --ignore cyclomaticcomplexity,longquoteblocks,maxlinelength
+    - mix test

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.1
+
+[changes]
+- updated deps
+- added travis.yml
+- swapped encoder from Poison -> Jason
+- introduced standard elixir 1.6 formatting
+- introduced credo linting
 
 ## v0.3.6
 
