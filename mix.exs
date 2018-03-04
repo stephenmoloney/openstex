@@ -10,26 +10,26 @@ defmodule Openstex.Mixfile do
       name: "Openstex",
       version: @version,
       elixir: @elixir_versions,
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
-      elixirc_paths: elixirc_paths(Mix.env),
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
       source_url: "https://github.com/stephenmoloney/openstex",
       description: description(),
       package: package(),
       aliases: aliases(),
       deps: deps(),
       docs: docs()
-   ]
+    ]
   end
 
-  def application() do
+  def application do
     [
       mod: [],
       extra_applications: [:crypto, :logger]
     ]
   end
 
-  defp deps() do
+  defp deps do
     [
       # deps
       {:jason, "~> 1.0"},
@@ -37,18 +37,17 @@ defmodule Openstex.Mixfile do
       {:httpipe, "~> 0.9"},
       {:hackney, @hackney_versions, override: true},
 
-      # dev deps
-      {:markdown, github: "devinus/markdown", only: [:dev]},
-      {:ex_doc,  "~> 0.18", only: [:dev]},
-
-      # test deps
+      # dev/test deps
+      {:markdown, github: "devinus/markdown", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.18", only: [:dev], runtime: false},
+      {:credo, "~> 0.9.0-rc8", only: [:dev, :test], runtime: false},
       {:bypass, "~> 0.8", only: [:test]},
       {:httpipe_adapters_hackney, "~> 0.11", only: [:test]},
       {:temp, "~> 0.4", only: [:test]}
     ]
   end
 
-  defp description() do
+  defp description do
     ~s"""
     A client in elixir for making requests to openstack compliant apis.
     """
@@ -58,15 +57,15 @@ defmodule Openstex.Mixfile do
     %{
       licenses: ["MIT"],
       maintainers: ["Stephen Moloney"],
-      links: %{ "GitHub" => "https://github.com/stephenmoloney/openstex"},
+      links: %{"GitHub" => "https://github.com/stephenmoloney/openstex"},
       files: ~w(lib mix.exs CHANGELOG* README* LICENCE*)
-     }
+    }
   end
 
-  defp docs() do
+  defp docs do
     [
-    main: "Openstex",
-    extras: []
+      main: "Openstex",
+      extras: []
     ]
   end
 
@@ -75,10 +74,13 @@ defmodule Openstex.Mixfile do
 
   defp aliases do
     [
+      format: [
+        "format #{format_args(:lib)}",
+        "format #{format_args(:test)}"
+      ],
       prep: [
         "clean",
-        "format #{format_args(:lib)}",
-        "format #{format_args(:test)}",
+        "format",
         "compile",
         "credo #{credo_args()}"
       ]
@@ -86,7 +88,7 @@ defmodule Openstex.Mixfile do
   end
 
   defp credo_args do
-    "--strict"
+    "--strict --ignore cyclomaticcomplexity,longquoteblocks,maxlinelength"
   end
 
   defp format_args(:lib) do
@@ -94,6 +96,6 @@ defmodule Openstex.Mixfile do
   end
 
   defp format_args(:test) do
-    "mix.exs test/**/*.{ex,exs}"
+    "mix.exs test/**/*.{ex,exs} test/**/**/*.{ex,exs}"
   end
 end

@@ -1,9 +1,10 @@
 defmodule Openstex.Swift.V1Test do
   use ExUnit.Case, async: false
-
+  alias Openstex.Swift.V1
+  alias HTTPipe.Conn
 
   test "account_info(String.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: nil,
         headers: %{},
@@ -13,13 +14,12 @@ defmodule Openstex.Swift.V1Test do
         url: "test_account?format=json"
       }
     }
-    actual = Openstex.Swift.V1.account_info("test_account")
+    actual = V1.account_info("test_account")
     assert expected.request == actual.request
   end
-
 
   test "create_container(String.t, String.t, Keyword.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{"X-Container-Read" => ".r:*", "X-Container-Write" => "test_account"},
@@ -30,10 +30,10 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.create_container("test_container", "test_account", [read_acl: ".r:*", write_acl: "test_account"])
+    actual = V1.create_container("test_container", "test_account", [read_acl: ".r:*", write_acl: "test_account"])
     assert expected.request == actual.request
 
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{
@@ -57,7 +57,7 @@ defmodule Openstex.Swift.V1Test do
         {"X-Container-Meta-Access-Control-Max-Age", "1000"}
       ]
     ]
-    actual = Openstex.Swift.V1.create_container("test_container", "test_account", opts)
+    actual = V1.create_container("test_container", "test_account", opts)
     assert expected.request == actual.request
 
     opts = [
@@ -68,13 +68,12 @@ defmodule Openstex.Swift.V1Test do
         {"X-Container-Meta-Access-Control-Max-Age", "1000"}
       ]
     ]
-    actual = Openstex.Swift.V1.create_container("test_container", "test_account", opts)
+    actual = V1.create_container("test_container", "test_account", opts)
     assert expected.request == actual.request
   end
-
 
   test "modify_container(String.t, String.t, Keyword.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{"X-Container-Read" => ".r:*", "X-Container-Write" => "test_account"},
@@ -85,10 +84,10 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.modify_container("test_container", "test_account", [read_acl: ".r:*", write_acl: "test_account"])
+    actual = V1.modify_container("test_container", "test_account", [read_acl: ".r:*", write_acl: "test_account"])
     assert expected.request == actual.request
 
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{
@@ -112,7 +111,7 @@ defmodule Openstex.Swift.V1Test do
         {"X-Container-Meta-Access-Control-Max-Age", "1000"}
       ]
     ]
-    actual = Openstex.Swift.V1.modify_container("test_container", "test_account", opts)
+    actual = V1.modify_container("test_container", "test_account", opts)
     assert expected.request == actual.request
 
     opts = [
@@ -123,13 +122,12 @@ defmodule Openstex.Swift.V1Test do
         {"X-Container-Meta-Access-Control-Max-Age", "1000"}
       ]
     ]
-    actual = Openstex.Swift.V1.modify_container("test_container", "test_account", opts)
+    actual = V1.modify_container("test_container", "test_account", opts)
     assert expected.request == actual.request
   end
 
-
   test "delete_container(String.t, String.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{},
@@ -140,13 +138,12 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.delete_container("test_container", "test_account")
+    actual = V1.delete_container("test_container", "test_account")
     assert expected.request == actual.request
   end
 
-
   test "get_objects(String.t, String.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{},
@@ -157,13 +154,12 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.get_objects("test_container", "test_account")
+    actual = V1.get_objects("test_container", "test_account")
     assert expected.request == actual.request
   end
 
-
   test "get_object(String.t, String.t, String.t, Keyword.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{},
@@ -174,14 +170,13 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.get_object("/path/to_object", "test_container", "test_account")
+    actual = V1.get_object("/path/to_object", "test_container", "test_account")
     assert expected.request == actual.request
 
-    expected = HTTPipe.Conn.put_req_header(expected, "If-None-Match", "md5") # note httpipe will downcase headers!
-    actual = Openstex.Swift.V1.get_object("/path/to_object", "test_container", "test_account", [headers: [{"if-none-match", "md5"}]])
+    expected = Conn.put_req_header(expected, "If-None-Match", "md5") # note httpipe will downcase headers!
+    actual = V1.get_object("/path/to_object", "test_container", "test_account", [headers: [{"if-none-match", "md5"}]])
     assert expected.request == actual.request
   end
-
 
   test "create_object(String.t, String.t, String.t, list)" do
     Temp.track!()
@@ -190,7 +185,7 @@ defmodule Openstex.Swift.V1Test do
     File.write(source_file, "swift test content")
     body = File.read!(source_file)
 
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: body,
         headers: %{"etag" => Base.encode16(:erlang.md5(body), case: :lower)},
@@ -201,7 +196,7 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.create_object("test_container", "test_account", source_file)
+    actual = V1.create_object("test_container", "test_account", source_file)
     assert expected.request == actual.request
 
     opts = [
@@ -211,13 +206,14 @@ defmodule Openstex.Swift.V1Test do
       chunked_transfer: :true,
       content_type: "text/plain"
     ]
-    expected = HTTPipe.Conn.put_req_url(expected, "test_account/test_container/destination_path?format=json&multipart-manifest=put")
-    |> HTTPipe.Conn.put_req_header("X-Object-Manifest", "test_account/test_container/destination_path/")
-    |> HTTPipe.Conn.put_req_header("Transfer-Encoding", "chunked")
-    |> HTTPipe.Conn.put_req_header("Content-Type", "text/plain")
-    actual = Openstex.Swift.V1.create_object("test_container", "test_account", source_file, opts)
+    expected =
+    expected
+    |> Conn.put_req_url("test_account/test_container/destination_path?format=json&multipart-manifest=put")
+    |> Conn.put_req_header("X-Object-Manifest", "test_account/test_container/destination_path/")
+    |> Conn.put_req_header("Transfer-Encoding", "chunked")
+    |> Conn.put_req_header("Content-Type", "text/plain")
+    actual = V1.create_object("test_container", "test_account", source_file, opts)
     assert expected.request == actual.request
-
 
     opts = [
       x_detect_content_type: :true,
@@ -225,13 +221,13 @@ defmodule Openstex.Swift.V1Test do
       content_disposition: "inline",
       delete_after: (24 * 60 * 60)
     ]
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: body,
         headers: %{
           "x-detect-content-type" => "true",
           "content-disposition" => "inline",
-          "x-delete-after" => 86400
+          "x-delete-after" => 86_400
         },
         http_version: "1.1",
         method: :put,
@@ -239,15 +235,14 @@ defmodule Openstex.Swift.V1Test do
         url: "test_account/test_container/swift_test_file?format=json"
       }
     }
-    actual = Openstex.Swift.V1.create_object("test_container", "test_account", source_file, opts)
+    actual = V1.create_object("test_container", "test_account", source_file, opts)
     assert expected.request == actual.request
 
     Temp.cleanup()
   end
 
-
   test "delete_object(String.t, String.t, String.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{},
@@ -258,13 +253,12 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.delete_object("destination_path", "test_container", "test_account")
+    actual = V1.delete_object("destination_path", "test_container", "test_account")
     assert expected.request == actual.request
   end
 
-
   test "get_objects_in_folder(String.t, String.t, String.t)" do
-    expected = %HTTPipe.Conn{
+    expected = %Conn{
       request: %HTTPipe.Request{
         body: :nil,
         headers: %{},
@@ -275,9 +269,7 @@ defmodule Openstex.Swift.V1Test do
       }
     }
 
-    actual = Openstex.Swift.V1.get_objects_in_folder("test_folder/", "test_container", "test_account")
+    actual = V1.get_objects_in_folder("test_folder/", "test_container", "test_account")
     assert expected.request == actual.request
   end
-
-
 end

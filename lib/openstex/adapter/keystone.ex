@@ -6,8 +6,7 @@ defmodule Openstex.Adapter.Keystone do
   alias Openstex.Keystone.V2.Helpers.Identity
 
   @callback start_link(atom) :: {:ok, pid} | {:error, :already_started}
-  @callback start_link(atom, opts :: Keyword.t) :: {:ok, pid} | {:error, :already_started}
-  @callback identity(atom) :: Identity.t | no_return
-  @callback get_xauth_token(atom) :: String.t | no_return
-
+  @callback start_link(atom, opts :: Keyword.t()) :: {:ok, pid} | {:error, :already_started}
+  @callback identity(atom) :: Identity.t() | no_return
+  @callback get_xauth_token(atom) :: String.t() | no_return
 end

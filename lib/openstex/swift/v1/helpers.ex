@@ -7,119 +7,147 @@ defmodule Openstex.Swift.V1.Helpers do
     quote bind_quoted: [opts: opts] do
       alias Openstex.Keystone.V2.Helpers.Identity
       alias Openstex.Swift.V1
+      alias Openstex.Utils
+      alias HTTPipe.Conn
       @behaviour Openstex.Swift.V1.Helpers
 
-      @doc :false
-      def client(), do: Keyword.fetch!(unquote(opts), :client)
+      @doc false
+      def client do
+        Keyword.fetch!(unquote(opts), :client)
+      end
 
-      @doc :false
-      def default_hackney_opts(), do: client() |> client().config().hackney_config()
+      @doc false
+      def default_hackney_opts do
+        client().config().hackney_config(client())
+      end
 
-      def get_public_url() do
+      def get_public_url do
         client()
         |> client().keystone().identity()
         |> Map.get(:service_catalog)
-        |> Enum.find(fn(%Identity.Service{} = service) ->
+        |> Enum.find(fn %Identity.Service{} = service ->
           service.name == client().config().swift_service_name() &&
-          service.type == client().config().swift_service_type()
+            service.type == client().config().swift_service_type()
         end)
         |> Map.get(:endpoints)
-        |> Enum.find(fn(%Identity.Endpoint{} = endpoint) ->
+        |> Enum.find(fn %Identity.Endpoint{} = endpoint ->
           endpoint.region == client().config().swift_region(client())
         end)
         |> Map.get(:public_url)
       end
 
-      def get_account() do
-        public_url = get_public_url()
-        path = URI.parse(public_url) |> Map.get(:path)
-        {version, account} = String.split_at(path, 4)
+      def get_account do
+        path =
+          get_public_url()
+          |> URI.parse()
+          |> Map.get(:path)
+
+        {_version, account} = String.split_at(path, 4)
         account
       end
 
-      def get_endpoint() do
-        public_url = get_public_url()
-        path = URI.parse(public_url) |> Map.get(:path)
+      def get_endpoint do
+        path =
+          get_public_url()
+          |> URI.parse()
+          |> Map.get(:path)
+
         {version, account} = String.split_at(path, 4)
-        endpoint = String.split(public_url, account) |> List.first()
-        endpoint
+
+        get_public_url()
+        |> String.split(account)
+        |> List.first()
       end
 
       def get_account_tempurl_key(key_number \\ :key1) do
-
         header =
-        case key_number do
-          :key1 -> "X-Account-Meta-Temp-Url-Key"
-          :key2 -> "X-Account-Meta-Temp-Url-Key-2"
-        end
+          case key_number do
+            :key1 -> "X-Account-Meta-Temp-Url-Key"
+            :key2 -> "X-Account-Meta-Temp-Url-Key-2"
+          end
 
         # first attempt to get the account key from the swift server
-        headers = V1.account_info(get_account())
-        |> client().request!()
-        |> Map.get(:response)
-        |> Map.fetch!(:headers)
-        key = Map.get(headers, header, :nil) || Map.get(headers, String.downcase(header), :nil)
+        headers =
+          get_account()
+          |> V1.account_info()
+          |> client().request!()
+          |> Map.get(:response)
+          |> Map.fetch!(:headers)
+
+        key = Map.get(headers, header, nil) || Map.get(headers, String.downcase(header), nil)
 
         # then attempt to get the get_account() key from the config file
         cond do
-          key == :nil && key_number == :key1 ->
+          key == nil && key_number == :key1 ->
             client().config().get_account_temp_url_key1(client())
-          key == :nil && key_number == :key2 ->
+
+          key == nil && key_number == :key2 ->
             client().config().get_account_temp_url_key2(client())
-          :true ->
+
+          true ->
             key
         end
-#          if key != :nil, do: set_account_temp_url_key(key_number, key)
+
+        #          if key != :nil, do: set_account_temp_url_key(key_number, key)
       end
 
-      def set_account_temp_url_key(key_number \\ :key1, key \\ :nil) do
+      def set_account_temp_url_key(key_number \\ :key1, key \\ nil) do
         {key, header} =
-        case key_number do
-          :key1 ->
-            if key == :nil do
-              {client().config().get_account_temp_url_key1(client()), "X-Account-Meta-Temp-Url-Key"}
-            else
-              {key, "X-Account-Meta-Temp-Url-Key"}
-            end
-          :key2 ->
-            if key == :nil do
-              {client().config().get_account_temp_url_key2(client()), "X-Account-Meta-Temp-Url-Key-2"}
-            else
-              {key, "X-Account-Meta-Temp-Url-Key-2"}
-            end
-        end
+          case key_number do
+            :key1 ->
+              if key == nil do
+                {client().config().get_account_temp_url_key1(client()),
+                 "X-Account-Meta-Temp-Url-Key"}
+              else
+                {key, "X-Account-Meta-Temp-Url-Key"}
+              end
+
+            :key2 ->
+              if key == nil do
+                {client().config().get_account_temp_url_key2(client()),
+                 "X-Account-Meta-Temp-Url-Key-2"}
+              else
+                {key, "X-Account-Meta-Temp-Url-Key-2"}
+              end
+          end
+
         put_temp_url_key(key, header, key_number)
       end
 
       def delete_container(container) do
         results =
-        with {:ok, containers} <- client().swift().list_containers(),
-          :true <- container in containers,
-          {:ok, pseudofolders} <- client().swift().list_pseudofolders(container) do
-          Enum.map(pseudofolders, fn(pseudofolder) ->
+          with {:ok, containers} <- client().swift().list_containers(),
+               true <- container in containers,
+               {:ok, pseudofolders} <- client().swift().list_pseudofolders(container) do
+            Enum.map(pseudofolders, fn pseudofolder ->
               client().swift().delete_pseudofolder(pseudofolder, container)
-          end)
+            end)
+          else
+            false -> :ok
+            {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
+            other -> other
+          end
+
+        with true <- Enum.all?(results, fn res -> res == :ok end),
+             {:ok, objs} <- client().swift().list_objects("", container),
+             _res <- Enum.map(objs, &client().swift().delete_object(&1, container)),
+             {:ok, conn} =
+               container
+               |> V1.delete_container(client().swift().get_account())
+               |> client().request() do
+          {:ok, conn}
         else
-          :false -> :ok
-          {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
-          other -> other
-        end
-        with :true <- Enum.all?(results, fn(res) -> res == :ok  end),
-          {:ok, objs} <- client().swift().list_objects("", container),
-          _res <- Enum.map(objs, &(client().swift().delete_object(&1, container))),
-          {:ok, conn} = V1.delete_container(container, client().swift().get_account())
-          |> client().request() do
-            {:ok, conn}
-        else
-          :false -> {:error, results}
+          false -> {:error, results}
           {:error, %HTTPipe.Conn{} = conn} -> {:error, conn}
           other -> other
         end
       end
 
       def delete_object(server_object, container) do
-        request = V1.delete_object(server_object, container, get_account())
-        |> client().request()
+        request =
+          server_object
+          |> V1.delete_object(container, get_account())
+          |> client().request()
       end
 
       def delete_object!(server_object, container) do
@@ -131,6 +159,7 @@ defmodule Openstex.Swift.V1.Helpers do
               conn = V1.delete_object(server_object, container, get_account())
               raise(Openstex.ResponseError, conn: conn)
             end
+
           {:error, conn} ->
             conn = V1.delete_object(server_object, container, get_account())
             raise(Openstex.ResponseError, conn: conn)
@@ -153,6 +182,7 @@ defmodule Openstex.Swift.V1.Helpers do
               conn = V1.create_object(container, get_account(), file, upload_opts)
               raise(Openstex.ResponseError, conn: conn)
             end
+
           {:error, conn} ->
             upload_opts = upload_opts ++ [server_object: server_object]
             conn = V1.create_object(container, get_account(), file, upload_opts)
@@ -167,21 +197,27 @@ defmodule Openstex.Swift.V1.Helpers do
 
       def download_file!(server_object, container) do
         case download_file(server_object, container) do
-          {:ok, conn} -> conn.response.body
+          {:ok, conn} ->
+            conn.response.body
+
           {:error, conn} ->
             conn = V1.get_object(server_object, container, get_account())
             raise(Openstex.ResponseError, conn: conn)
         end
       end
 
-      def list_containers() do
-        case Openstex.Swift.V1.account_info(get_account()) |> client().request() do
+      def list_containers do
+        case get_account() |> V1.account_info() |> client().request() do
           {:ok, conn} ->
-            list = Enum.map(conn.response.body, fn(container_infos) ->
-              Map.fetch!(container_infos, "name")
-            end)
+            list =
+              Enum.map(conn.response.body, fn container_infos ->
+                Map.fetch!(container_infos, "name")
+              end)
+
             {:ok, list}
-          {:error, conn} -> {:error, conn}
+
+          {:error, conn} ->
+            {:error, conn}
         end
       end
 
@@ -193,39 +229,47 @@ defmodule Openstex.Swift.V1.Helpers do
       end
 
       def list_objects(container) do
-        list_objects("", container, [nested: :true])
+        list_objects("", container, nested: true)
       end
 
-      @spec list_objects!(String.t) :: list | no_return
+      @spec list_objects!(String.t()) :: list | no_return
       def list_objects!(container) do
-        list_objects!("", container, [nested: :true])
+        list_objects!("", container, nested: true)
       end
-
 
       def list_objects(pseudofolder, container, opts \\ [])
-      def list_objects(pseudofolder, container, [nested: :true]) do
+
+      def list_objects(pseudofolder, container, nested: true) do
         with {:ok, list} <- list_containers(),
-             :true <- Enum.member?(list, container),
-             {:ok, pseudofolders} <- list_pseudofolders(pseudofolder, container, [nested: :true]),
-             pseudofolders <- pseudofolders = [ pseudofolder  | pseudofolders ],
-             objects = Enum.reduce(pseudofolders, [], fn(pseudofolder, acc) ->
-               {:ok, objects} = get_objects_only_in_pseudofolder(pseudofolder, container, get_account())
-               Enum.concat(objects, acc)
-             end) do
-           {:ok, objects}
+             true <- Enum.member?(list, container),
+             {:ok, pseudofolders} <- list_pseudofolders(pseudofolder, container, nested: true),
+             pseudofolders <- pseudofolders = [pseudofolder | pseudofolders],
+             objects =
+               Enum.reduce(pseudofolders, [], fn pseudofolder, acc ->
+                 {:ok, objects} =
+                   get_objects_only_in_pseudofolder(pseudofolder, container, get_account())
+
+                 Enum.concat(objects, acc)
+               end) do
+          {:ok, objects}
         else
-          :false -> {:error, "Unsuccessful request, container `#{container}` does not seem to exist."}
-          {:error, conn} -> {:error, conn}
+          false ->
+            {:error, "Unsuccessful request, container `#{container}` does not seem to exist."}
+
+          {:error, conn} ->
+            {:error, conn}
         end
       end
-      def list_objects(pseudofolder, container, [nested: :false]) do
+
+      def list_objects(pseudofolder, container, nested: false) do
         case get_objects_only_in_pseudofolder(pseudofolder, container, get_account()) do
           {:ok, objects} -> {:ok, objects}
           {:error, conn} -> {:error, conn}
         end
       end
+
       def list_objects(pseudofolder, container, []) do
-        list_objects(pseudofolder, container, [nested: :false])
+        list_objects(pseudofolder, container, nested: false)
       end
 
       def list_objects!(folder, container, opts \\ []) do
@@ -237,7 +281,7 @@ defmodule Openstex.Swift.V1.Helpers do
       end
 
       def list_pseudofolders(container) do
-        list_pseudofolders("", container, [nested: :true])
+        list_pseudofolders("", container, nested: true)
       end
 
       def list_pseudofolders(pseudofolder, container) do
@@ -245,27 +289,31 @@ defmodule Openstex.Swift.V1.Helpers do
       end
 
       def list_pseudofolders(pseudofolder, container, opts) do
-        nested? = Keyword.get(opts, :nested, :false)
-        pseudofolder = Openstex.Utils.ensure_has_leading_slash(pseudofolder)
-        |> Openstex.Utils.remove_if_has_trailing_slash()
+        nested? = Keyword.get(opts, :nested, false)
+
+        pseudofolder =
+          pseudofolder
+          |> Utils.ensure_has_leading_slash()
+          |> Utils.remove_if_has_trailing_slash()
+
         conn = V1.get_objects_in_folder(pseudofolder, container, get_account())
-        case nested? do
-          :true ->
+
+        with false <- nested?,
+             {:ok, conn} <- client().request(conn) do
+          body = (conn.response.body == "" && []) || conn.response.body
+          folders = filter_non_pseudofolders(body)
+          {:ok, folders}
+        else
+          true ->
             recurse_pseudofolders(conn, container, get_account())
-          :false ->
-            case client().request(conn) do
-              {:ok, conn} ->
-                body = if conn.response.body == "", do: [], else: conn.response.body
-                folders = filter_non_pseudofolders(body)
-                {:ok, folders}
-              {:error, conn} ->
-                {:error, conn}
-            end
+
+          {:error, conn} ->
+            {:error, conn}
         end
       end
 
       def list_pseudofolders!(container) do
-        list_pseudofolders!("", container, [nested: :true])
+        list_pseudofolders!("", container, nested: true)
       end
 
       def list_pseudofolders!(pseudofolder, container) do
@@ -279,48 +327,58 @@ defmodule Openstex.Swift.V1.Helpers do
         end
       end
 
-      def pseudofolder_exists?("", container), do: :false
-      def pseudofolder_exists?("/", container), do: :false
+      def pseudofolder_exists?("", container), do: false
+      def pseudofolder_exists?("/", container), do: false
+
       def pseudofolder_exists?(pseudofolder, container) do
-        pseudofolder = Openstex.Utils.remove_if_has_trailing_slash(pseudofolder)
-        |> Openstex.Utils.ensure_has_leading_slash()
+        pseudofolder =
+          pseudofolder
+          |> Utils.remove_if_has_trailing_slash()
+          |> Utils.ensure_has_leading_slash()
+
         with split_list when split_list != [] <- Path.split(pseudofolder),
              one_level_up <- List.delete_at(split_list, -1),
-             one_level_up <- (one_level_up == []) && "" || Path.join(one_level_up),
-             {:ok, pseudofolders} when pseudofolders != [] <- list_pseudofolders(one_level_up, container, []) do
+             one_level_up <- (one_level_up == [] && "") || Path.join(one_level_up),
+             {:ok, pseudofolders} when pseudofolders != [] <-
+               list_pseudofolders(one_level_up, container, []) do
           Enum.member?(pseudofolders, pseudofolder)
         else
-          [] -> :false
-          {:ok, pseudofolders} when pseudofolders == [] -> :false
+          [] -> false
+          {:ok, pseudofolders} when pseudofolders == [] -> false
           {:error, conn} -> raise(Openstex.ResponseError, conn: conn)
         end
       end
 
       def delete_pseudofolder(pseudofolder, container) do
         if pseudofolder_exists?(pseudofolder, container) do
-          responses = list_objects!(pseudofolder, container, [nested: :true])
-          |> Enum.map(fn(obj) ->
-            conn = V1.delete_object(obj, container, get_account())
-            case client().request(conn) do
-              {:ok, _conn} -> :ok
-              {:error, _conn} -> {:error, obj}
-            end
-          end)
-          failed_deletes = Enum.filter(responses,
-            fn(resp) ->
-              case resp do
-                :ok -> :false
-                _ -> :true
+          responses =
+            pseudofolder
+            |> list_objects!(container, nested: true)
+            |> Enum.map(fn obj ->
+              conn = V1.delete_object(obj, container, get_account())
+
+              case client().request(conn) do
+                {:ok, _conn} -> :ok
+                {:error, _conn} -> {:error, obj}
               end
-            end
-          )
-          |> Enum.map(fn(resp) ->
-            Tuple.to_list(resp) |> List.last()
-          end)
+            end)
+
+          failed_deletes =
+            responses
+            |> Enum.filter(fn resp ->
+              resp != :ok
+            end)
+            |> Enum.map(fn resp ->
+              resp
+              |> Tuple.to_list()
+              |> List.last()
+            end)
+
           if failed_deletes == [] do
             :ok
           else
-            {:error, failed_deletes} # failed_deletes = objects which were not deleted
+            # failed_deletes = objects which were not deleted
+            {:error, failed_deletes}
           end
         else
           :ok
@@ -329,86 +387,124 @@ defmodule Openstex.Swift.V1.Helpers do
 
       def generate_temp_url(container, server_object, opts \\ []) do
         temp_url_key = get_account_tempurl_key(:key1)
-        temp_url_expires_after = Keyword.get(opts, :temp_url_expires_after, (5 * 60))
-        temp_url_filename = Keyword.get(opts, :temp_url_filename, :false)
-        temp_url_inline = Keyword.get(opts, :temp_url_inline, :false)
+        temp_url_expires_after = Keyword.get(opts, :temp_url_expires_after, 5 * 60)
+        temp_url_filename = Keyword.get(opts, :temp_url_filename, false)
+        temp_url_inline = Keyword.get(opts, :temp_url_inline, false)
         temp_url_method = Keyword.get(opts, :temp_url_method, "GET")
         path = "/v1/#{get_account()}/#{container}/#{server_object}"
         temp_url_expiry = :os.system_time(:seconds) + temp_url_expires_after
-        temp_url_sig = Openstex.Utils.gen_tempurl_signature(temp_url_method, temp_url_expiry, path, temp_url_key)
 
-        qs_map = Map.put(%{}, :temp_url_sig, temp_url_sig)
-        |> Map.put(:temp_url_expires, temp_url_expiry)
-        qs_map = if temp_url_filename, do: Map.put(qs_map, :filename, temp_url_filename), else: qs_map
+        temp_url_sig =
+          Utils.gen_tempurl_signature(
+            temp_url_method,
+            temp_url_expiry,
+            path,
+            temp_url_key
+          )
 
-        url = client().swift().get_public_url() <> "/#{container}/#{server_object}" <> "?" <> URI.encode_query(qs_map)
+        qs_map =
+          %{}
+          |> Map.put(:temp_url_sig, temp_url_sig)
+          |> Map.put(:temp_url_expires, temp_url_expiry)
+
+        qs_map =
+          if temp_url_filename, do: Map.put(qs_map, :filename, temp_url_filename), else: qs_map
+
+        url =
+          client().swift().get_public_url() <>
+            "/#{container}/#{server_object}" <> "?" <> URI.encode_query(qs_map)
+
         if temp_url_inline, do: url <> "&inline", else: url
       end
 
-
       # Private
 
-
       defp get_objects_only_in_pseudofolder(obj, container, account) do
-        obj = Openstex.Utils.ensure_has_leading_slash(obj)
-        |> Openstex.Utils.remove_if_has_trailing_slash()
+        obj =
+          obj
+          |> Utils.ensure_has_leading_slash()
+          |> Utils.remove_if_has_trailing_slash()
+
         request = V1.get_objects_in_folder(obj, container, account)
+
         case client().request(request) do
           {:ok, conn} ->
-            objects = conn.response.body
-            |> Enum.filter(fn(e) -> Map.has_key?(e, "subdir") == :false end)
-            |> Enum.map(fn(e) ->  e["name"] end)
+            objects =
+              conn.response.body
+              |> Enum.filter(fn e -> Map.has_key?(e, "subdir") == false end)
+              |> Enum.map(fn e -> e["name"] end)
+
             {:ok, objects}
+
           {:error, conn} ->
             {:error, conn}
         end
       end
 
       defp get_pseudofolders(obj, container, account) do
-        obj = Openstex.Utils.ensure_has_leading_slash(obj)
-        |> Openstex.Utils.remove_if_has_trailing_slash()
-        V1.get_objects_in_folder(obj, container, account)
+        obj =
+          obj
+          |> Utils.ensure_has_leading_slash()
+          |> Utils.remove_if_has_trailing_slash()
+
+        obj
+        |> V1.get_objects_in_folder(container, account)
         |> client().request!()
-        |> Map.get(:response) |> Map.get(:body)
-        |> Enum.filter(fn(e) -> e["subdir"] != :nil end)
-        |> Enum.map(fn(e) ->  e["subdir"] end)
+        |> Map.get(:response)
+        |> Map.get(:body)
+        |> Enum.filter(fn e -> e["subdir"] != nil end)
+        |> Enum.map(fn e -> e["subdir"] end)
       end
 
       defp filter_non_pseudofolders(objects) do
-        Enum.filter(objects, fn(e) -> e["subdir"] != :nil end)
-        |> Enum.map(fn(e) ->  e["subdir"] end)
+        objects
+        |> Enum.filter(fn e -> e["subdir"] != nil end)
+        |> Enum.map(fn e -> e["subdir"] end)
       end
 
       defp recurse_pseudofolders(%HTTPipe.Conn{} = conn, container, account) do
         case client().request(conn) do
           {:ok, conn} ->
             folders = filter_non_pseudofolders(conn.response.body)
-            pseudofolders = recurse_pseudofolders(folders, container, account)
-            |> Enum.filter(fn(e) -> e != "" end) # filters out the very top-level root folder "/"
-            |> Enum.map(fn(e) -> e end)
+            # filters out the very top-level root folder "/"
+            pseudofolders =
+              folders
+              |> recurse_pseudofolders(container, account)
+              |> Enum.filter(fn e -> e != "" end)
+              |> Enum.map(fn e -> e end)
+
             {:ok, pseudofolders}
+
           {:error, conn} ->
             {:error, conn}
         end
       end
+
       defp recurse_pseudofolders(folder, container, account) when is_binary(folder) do
         recurse_pseudofolders([folder], [], container, account)
       end
+
       defp recurse_pseudofolders(folders, container, account) when is_list(folders) do
         recurse_pseudofolders(folders, [], container, account)
       end
-      defp recurse_pseudofolders([ f | folders ], acc, container, account) do
+
+      defp recurse_pseudofolders([f | folders], acc, container, account) do
         deeper_nested = get_pseudofolders(f, container, account)
+
         case deeper_nested == [] do
-          :true ->
-            acc = [ f | acc ]
+          true ->
+            acc = [f | acc]
             recurse_pseudofolders(folders, acc, container, account)
-          :false ->
-            acc = [ f | acc ]
-            recurse_pseudofolders(folders, acc, container, account)
+
+          false ->
+            acc = [f | acc]
+
+            folders
+            |> recurse_pseudofolders(acc, container, account)
             |> Enum.concat(recurse_pseudofolders(deeper_nested, [], container, account))
         end
       end
+
       defp recurse_pseudofolders([], acc, container, account) do
         acc
       end
@@ -416,32 +512,24 @@ defmodule Openstex.Swift.V1.Helpers do
       defp put_temp_url_key(key, header, key_number) do
         %HTTPipe.Request{method: :post, url: get_account()}
         |> client().prepare_request()
-        |> HTTPipe.Conn.put_req_header(header, key)
+        |> Conn.put_req_header(header, key)
         |> client().request!()
 
         # update config genserver with new key
         case key_number do
           :key1 ->
             client().config().set_account_temp_url_key1(client(), key)
+
           :key2 ->
             client().config().set_account_temp_url_key2(client(), key)
         end
       end
-
     end
+  end
 
-  end   # end of __using__ macro
+  # end of __using__ macro
 
-
-  @doc ~s"""
-  Gets the public url (storage_url) for the swift endpoint.
-
-  ## Example
-
-      account = Client.Swift.get_public_url()
-  """
-  @callback get_public_url() :: String.t
-
+  @callback get_public_url() :: String.t()
 
   @doc ~s"""
   Gets the swift account string for the swift client.
@@ -450,8 +538,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
       account = Client.Swift.get_account()
   """
-  @callback get_account() :: String.t | no_return
-
+  @callback get_account() :: String.t() | no_return
 
   @doc ~s"""
   Gets the swift endpoint for a given swift client. Returns the publicUrl
@@ -461,8 +548,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
       endpoint = Client.Swift.get_endpoint()
   """
-  @callback get_endpoint() :: String.t | no_return
-
+  @callback get_endpoint() :: String.t() | no_return
 
   @doc ~s"""
   Gets the tempurl key - at an account level.
@@ -471,8 +557,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
       tempurl_key = Client.Swift.get_account_tempurl_key(:key1)
   """
-  @callback get_account_tempurl_key(key_number :: atom) :: String.t | no_return
-
+  @callback get_account_tempurl_key(key_number :: atom) :: String.t() | no_return
 
   @doc ~s"""
   Sets the account tempurl key - at an account level.
@@ -481,8 +566,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
       :ok = Client.Swift.set_account_temp_url_key(:key1, "SECRET_TEMPURL_KEY")
   """
-  @callback set_account_temp_url_key(key_number :: atom, key :: String.t) :: :ok | no_return
-
+  @callback set_account_temp_url_key(key_number :: atom, key :: String.t()) :: :ok | no_return
 
   @doc ~s"""
   Deletes an object from a given container
@@ -495,9 +579,8 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback delete_object(server_object :: String.t, container :: String.t)
-            :: {:ok, HTTPipe.Conn.t} | {:error, HTTPipe.Conn.t}
-
+  @callback delete_object(server_object :: String.t(), container :: String.t()) ::
+              {:ok, Conn.t()} | {:error, Conn.t()}
 
   @doc ~s"""
   Deletes an object from a given container
@@ -507,8 +590,8 @@ defmodule Openstex.Swift.V1.Helpers do
       server_object = "/openstex_tests/nested/test_file.json"
       :ok = Client.Swift.delete_object!(server_object, "default_container") do
   """
-  @callback delete_object!(server_object :: String.t, container :: String.t) :: :ok |no_return
-
+  @callback delete_object!(server_object :: String.t(), container :: String.t()) ::
+              :ok | no_return
 
   @doc ~s"""
   Upload a file.
@@ -529,10 +612,14 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback upload_file(client_path :: String.t, server_path :: String.t, container :: String.t, opts :: list)
-            :: {:ok, HTTPipe.Conn.t} |
-               {:error, HTTPipe.Conn.t}
-
+  @callback upload_file(
+              client_path :: String.t(),
+              server_path :: String.t(),
+              container :: String.t(),
+              opts :: list
+            ) ::
+              {:ok, Conn.t()}
+              | {:error, Conn.t()}
 
   @doc ~s"""
   Upload a file. See `upload_file/4`. Returns `:ok` if upload suceeeded,
@@ -544,10 +631,14 @@ defmodule Openstex.Swift.V1.Helpers do
       server_object = "/openstex_tests/nested/test_file.json"
       :ok = Client.Swift.upload_file!(file, server_object, "default_container") do
   """
-  @callback upload_file!(client_path :: String.t, server_path :: String.t, container :: String.t, opts :: list)
-            :: :ok |
-               no_return
-
+  @callback upload_file!(
+              client_path :: String.t(),
+              server_path :: String.t(),
+              container :: String.t(),
+              opts :: list
+            ) ::
+              :ok
+              | no_return
 
   @doc ~s"""
   Download a file. The body of the response contains the binary object (file).
@@ -566,10 +657,9 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback download_file(server_path :: String.t, container :: String.t)
-            :: {:ok, HTTPipe.Conn.t} |
-               {:error, HTTPipe.Conn.t}
-
+  @callback download_file(server_path :: String.t(), container :: String.t()) ::
+              {:ok, Conn.t()}
+              | {:error, Conn.t()}
 
   @doc ~s"""
   Downloading a file. Returns the binary object (file) or raises an error.
@@ -581,8 +671,7 @@ defmodule Openstex.Swift.V1.Helpers do
       container = "default_container"
       object = Client.Swift.download_file!(server_object, container)
   """
-  @callback download_file!(String.t, String.t) :: :binary | no_return
-
+  @callback download_file!(String.t(), String.t()) :: :binary | no_return
 
   @doc ~s"""
   Lists all containers.
@@ -596,7 +685,6 @@ defmodule Openstex.Swift.V1.Helpers do
   """
   @callback list_containers() :: {:ok, list} | {:error, map}
 
-
   @doc ~s"""
   Lists all containers. Returns a `list` or raises an error.
 
@@ -604,8 +692,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
       containers = Client.Swift.list_containers!()
   """
-  @callback list_containers!() :: list| no_return
-
+  @callback list_containers!() :: list | no_return
 
   @doc ~s"""
   Lists all objects within a container.
@@ -621,8 +708,7 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback list_objects(container :: String.t) :: {:ok, list} | {:error, map}
-
+  @callback list_objects(container :: String.t()) :: {:ok, list} | {:error, map}
 
   @doc ~s"""
   Lists all the objects in a container or raises an error.  See `list_objects/3`.
@@ -631,8 +717,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
       objects = Client.Swift.list_objects!()
   """
-  @callback list_objects!(container :: String.t) :: list | no_return
-
+  @callback list_objects!(container :: String.t()) :: list | no_return
 
   @doc ~s"""
   Lists objects within a pseudofolder in a container. Optionally list objects in
@@ -680,10 +765,9 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback list_objects(pseudofolder :: String.t, container :: String.t, opts :: list)
-            :: {:ok, list} |
-               {:error, HTTPipe.Conn.t}
-
+  @callback list_objects(pseudofolder :: String.t(), container :: String.t(), opts :: list) ::
+              {:ok, list}
+              | {:error, Conn.t()}
 
   @doc ~s"""
   Lists objects within a pseudofolder in a container or raises an error.
@@ -695,10 +779,9 @@ defmodule Openstex.Swift.V1.Helpers do
 
       objects_first_level_only = Client.Swift.list_objects!("test_folder/", "default", [nested: :false])
   """
-  @callback list_objects!(pseudofolder :: String.t, container :: String.t, opts :: list)
-            :: {:ok, list} |
-               no_return
-
+  @callback list_objects!(pseudofolder :: String.t(), container :: String.t(), opts :: list) ::
+              {:ok, list}
+              | no_return
 
   @doc ~s"""
   Lists all pseudofolders including nested pseudofolders in a container.
@@ -715,8 +798,7 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback list_pseudofolders(container :: String.t) :: {:ok, list} | {:error, HTTPipe.Conn.t}
-
+  @callback list_pseudofolders(container :: String.t()) :: {:ok, list} | {:error, Conn.t()}
 
   @doc ~s"""
   Lists pseudofolders one level deep in a given pseudofolder.
@@ -734,10 +816,9 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback list_pseudofolders(pseudofolder :: String.t, container :: String.t)
-            :: {:ok, list} |
-               {:error, HTTPipe.Conn.t}
-
+  @callback list_pseudofolders(pseudofolder :: String.t(), container :: String.t()) ::
+              {:ok, list}
+              | {:error, Conn.t()}
 
   @doc ~s"""
   List pseudofolders within a pseudofolder.
@@ -758,7 +839,6 @@ defmodule Openstex.Swift.V1.Helpers do
   - Traverses as deep as the most nested pseudofolder if `nested: :true`.
   - Excludes non-pseudofolder objects from the results, in other words, binary objects will be filtered
   from the results and only pseudofolders are returned.
-
 
   ## Example - (1)
 
@@ -787,10 +867,9 @@ defmodule Openstex.Swift.V1.Helpers do
         {:error, conn} -> ...
       end
   """
-  @callback list_pseudofolders(pseudofolder :: String.t, container :: String.t, opts :: list)
-            :: {:ok, list} |
-               {:error, map}
-
+  @callback list_pseudofolders(pseudofolder :: String.t(), container :: String.t(), opts :: list) ::
+              {:ok, list}
+              | {:error, map}
 
   @doc ~s"""
   Lists all pseudofolders including nested pseudofolders in a container. See `list_pseudofolders!/3`
@@ -803,8 +882,7 @@ defmodule Openstex.Swift.V1.Helpers do
 
       pseudofolders = Client.Swift.list_pseudofolders!("products_container")
   """
-  @callback list_pseudofolders!(String.t) :: list | no_return
-
+  @callback list_pseudofolders!(String.t()) :: list | no_return
 
   @doc ~s"""
   Lists pseudofolders one level deep from a given pseudofolder.
@@ -819,15 +897,15 @@ defmodule Openstex.Swift.V1.Helpers do
 
       categories = Client.Swift.list_pseudofolders!("products/cateogores/", "products_container")
   """
-  @callback list_pseudofolders!(pseudofolder :: String.t, container :: String.t) :: list | no_return
-
+  @callback list_pseudofolders!(pseudofolder :: String.t(), container :: String.t()) ::
+              list | no_return
 
   @doc ~s"""
   Lists all pseudofolders within a pseudofolder or raises an error.
   See `list_pseudofolders/3`.
   """
-  @callback list_pseudofolders!(pseudofolder :: String.t, container :: String.t, opts :: list) :: list| no_return
-
+  @callback list_pseudofolders!(pseudofolder :: String.t(), container :: String.t(), opts :: list) ::
+              list | no_return
 
   @doc ~s"""
   Checks if a pseudofolder exists.
@@ -844,8 +922,8 @@ defmodule Openstex.Swift.V1.Helpers do
         :false -> ...
       end
   """
-  @callback pseudofolder_exists?(pseudofolder :: String.t, container :: String.t) :: boolean | no_return
-
+  @callback pseudofolder_exists?(pseudofolder :: String.t(), container :: String.t()) ::
+              boolean | no_return
 
   @doc ~s"""
   Deletes all objects in a pseudofolder effectively deleting the pseudofolder itself.
@@ -868,8 +946,8 @@ defmodule Openstex.Swift.V1.Helpers do
       {:error, items} -> Enum.each(items, &IO.inspect/1)
     end
   """
-  @callback delete_pseudofolder(pseudofolder :: String.t, container :: String.t) :: :ok | {:error, list}
-
+  @callback delete_pseudofolder(pseudofolder :: String.t(), container :: String.t()) ::
+              :ok | {:error, list}
 
   @doc """
   Generates a tempurl for an object.
@@ -908,7 +986,6 @@ defmodule Openstex.Swift.V1.Helpers do
 
       temp_url = Client.Swift.generate_temp_url("test_container", "test_file.txt")
   """
-  @callback generate_temp_url(container :: String.t, server_path :: String.t, opts :: list) :: String.t
-
-
+  @callback generate_temp_url(container :: String.t(), server_path :: String.t(), opts :: list) ::
+              String.t()
 end

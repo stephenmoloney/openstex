@@ -7,7 +7,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
   @get_identity_interval 1000
   @update_identity_buffer 0
 
-
   # Public Openstex.Adapter.Keystone callbacks
 
   def start_link(openstex_client) do
@@ -23,7 +22,10 @@ defmodule Openstex.Adapters.Bypass.Keystone do
   end
 
   def get_xauth_token(openstex_client) do
-    get_identity(openstex_client) |> Map.get(:token) |> Map.get(:id)
+    openstex_client
+    |> get_identity()
+    |> Map.get(:token)
+    |> Map.get(:id)
   end
 
   # Genserver Callbacks
@@ -54,7 +56,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
 
   # private
 
-
   defp get_identity(openstex_client) do
     unless supervisor_exists?(openstex_client), do: start_link(openstex_client)
     get_identity(openstex_client, 0)
@@ -81,7 +82,6 @@ defmodule Openstex.Adapters.Bypass.Keystone do
     end
   end
 
-
   defp update_identity({openstex_client, _identity, timer_ref}) do
     new_identity = Utils.create_identity(openstex_client)
     :ets.insert(ets_tablename(openstex_client), {:identity, new_identity})
@@ -91,18 +91,16 @@ defmodule Openstex.Adapters.Bypass.Keystone do
     {openstex_client, new_identity, timer_ref}
   end
 
-
   defp get_seconds_to_expiry(identity) do
     iso_time = identity.token.expires
     (
-    DateTime.from_iso8601(iso_time)
-    |> Tuple.to_list()
-    |> Enum.at(1)
+    iso_time
+    |> DateTime.from_iso8601()
+    |> Kernel.elem(1)
     |> DateTime.to_unix()
     ) -
     (DateTime.utc_now() |> DateTime.to_unix())
   end
-
 
   defp create_ets_table(openstex_client) do
     ets_options = [
@@ -118,10 +116,7 @@ defmodule Openstex.Adapters.Bypass.Keystone do
     end
   end
 
-
   defp supervisor_exists?(client) do
     Process.whereis(client) != :nil
   end
-
-
 end

@@ -4,10 +4,9 @@ defmodule Openstex.Adapters.Bypass.Config do
 #  @default_options [timeout: 10000, recv_timeout: 30000]
 #  @default_adapter HTTPipe.Adapters.Hackney
   use Openstex.Adapter.Config
-
+  alias Openstex.Adapters.Bypass.Keystone.Utils
 
   # public
-
 
   def start_agent(client, opts) do
     otp_app = Keyword.get(opts, :otp_app, :false) || raise("Client has not been configured correctly, missing `:otp_app`")
@@ -15,41 +14,39 @@ defmodule Openstex.Adapters.Bypass.Config do
     Agent.start_link(fn -> config(client, otp_app, identity) end, name: agent_name(client))
   end
 
-
   @doc "Gets the bypass related config variables from a supervised Agent"
   def bypass_config(client) do
     Agent.get(agent_name(client), fn(config) -> config[:bypass] end)
   end
 
+  @doc :false
+  def swift_service_name do
+    "swift"
+  end
 
   @doc :false
-  def swift_service_name(), do: "swift"
-
-
-  @doc :false
-  def swift_service_type(), do: "object-store"
-
+  def swift_service_type do
+    "object-store"
+  end
 
   # private
 
-
   defp config(client, otp_app, identity) do
     [
-     bypass: bypass_config(client, otp_app),
-     keystone: keystone_config(client, otp_app, identity),
-     swift: swift_config(client, otp_app, identity),
-     hackney: hackney_config(client, otp_app)
+       bypass: bypass_config(client, otp_app),
+       keystone: keystone_config(client, otp_app, identity),
+       swift: swift_config(client, otp_app, identity),
+       hackney: hackney_config(client, otp_app)
     ]
   end
 
-
   defp bypass_config(client, otp_app) do
-    __MODULE__.get_config_from_env(client, otp_app) |> Keyword.fetch!(:bypass)
+    client
+    |> __MODULE__.get_config_from_env(otp_app)
+    |> Keyword.fetch!(:bypass)
   end
 
-
   defp keystone_config(client, otp_app, identity) do
-
     keystone_config = get_keystone_config_from_env(client, otp_app)
 
     tenant_id = keystone_config[:tenant_id] ||
@@ -61,7 +58,7 @@ defmodule Openstex.Adapters.Bypass.Config do
                 raise("cannot retrieve the user_id for keystone")
 
     endpoint =  keystone_config[:endpoint] ||
-                "http://localhost:3333/"
+                "http://localhost:3001/"
 
     [
     tenant_id: tenant_id,
@@ -70,10 +67,7 @@ defmodule Openstex.Adapters.Bypass.Config do
     ]
   end
 
-
   defp swift_config(client, otp_app, _identity) do
-
-
     swift_config = get_swift_config_from_env(client, otp_app)
 
     account_temp_url_key1 = swift_config[:account_temp_url_key1] ||
@@ -86,28 +80,25 @@ defmodule Openstex.Adapters.Bypass.Config do
              "Bypass-Region-1"
 
     [
-    account_temp_url_key1: account_temp_url_key1,
-    account_temp_url_key2: account_temp_url_key2,
-    region: region
+      account_temp_url_key1: account_temp_url_key1,
+      account_temp_url_key2: account_temp_url_key2,
+      region: region
     ]
   end
-
 
   defp hackney_config(client, otp_app) do
     hackney_config = get_hackney_config_from_env(client, otp_app)
-    connect_timeout = hackney_config[:timeout] || 30000
-    recv_timeout = hackney_config[:recv_timeout] || (60000 * 30)
+    connect_timeout = hackney_config[:timeout] || 30_000
+    recv_timeout = hackney_config[:recv_timeout] || 180_000
+
     [
-    timeout: connect_timeout,
-    recv_timeout: recv_timeout
+      timeout: connect_timeout,
+      recv_timeout: recv_timeout
     ]
   end
 
-
   defp create_identity(client, _otp_app) do
     # return identity struct
-    Openstex.Adapters.Bypass.Keystone.Utils.create_identity(client)
+    Utils.create_identity(client)
   end
-
-
 end

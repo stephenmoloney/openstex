@@ -1,5 +1,5 @@
 defmodule Openstex do
-  @moduledoc ~S"""
+  @moduledoc """
   Examples setting up clients for use with openstex. See the github
   `README` for getting started.
 
@@ -20,7 +20,6 @@ defmodule Openstex do
         end
       end
 
-
   ## Rackspace Cloudfiles Client
 
       defmodule Openstex.Cloudfiles do
@@ -32,7 +31,6 @@ defmodule Openstex do
           use Openstex.Swift.V1.Helpers, otp_app: :openstex, client: Openstex.Cloudfiles
         end
       end
-
 
   ## Rackspace CloudfilesCDN Client
 
@@ -47,6 +45,3 @@ defmodule Openstex do
       end
   """
 end
-
-
-
