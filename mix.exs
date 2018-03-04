@@ -35,7 +35,7 @@ defmodule Openstex.Mixfile do
       {:jason, "~> 1.0"},
       {:mapail, "~> 1.0"},
       {:httpipe, "~> 0.9"},
-      {:hackney, @hackney_versions, override: true},
+      {:hackney, @hackney_versions},
 
       # dev/test deps
       {:markdown, github: "devinus/markdown", only: [:dev], runtime: false},
